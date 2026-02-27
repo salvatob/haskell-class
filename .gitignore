@@ -1,0 +1,31 @@
+# Cabal build artifacts
+dist/
+dist-newstyle/
+cabal-dev/
+*.o
+*.hi
+*.hie
+
+# Cabal sandbox (older style)
+.cabal-sandbox/
+
+# GHC environment files
+.ghc.environment.*
+
+# Executables
+*.exe
+
+# HLS (Haskell Language Server)
+.hls/
+
+# Stack (in case you experiment)
+.stack-work/
+
+# OS generated
+.DS_Store
+Thumbs.db
+
+# Editor directories
+.vscode/
+.idea/
+*.swp
