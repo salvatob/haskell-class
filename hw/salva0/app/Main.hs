@@ -1,22 +1,18 @@
 module Main where
 import Data.Char (toLower, isAlpha)
 
-vowels :: String
-vowels = "aeiouy"
-
-isVowel :: Char -> Bool
-isVowel c = c `elem` vowels
-
 countVowels :: String -> Int
-countVowels = length . filter isVowel
+countVowels = length . filter ( `elem` "aeiouy")
 
 computeVowelPercentage :: String -> Int
-computeVowelPercentage w = (countVowels w * 100) `div` length w
+computeVowelPercentage w = 100 * countVowels w `div` length w
 
-collectLetters :: String -> String
-collectLetters str = concat $ ( filter ((>= 3) . length) . words)
-        $ filter isAlpha $ fmap toLower str
+filterLongWords :: String -> [String]
+filterLongWords = filter ((>= 3) . length) . words
+
+normalizeWords :: [String] -> String
+normalizeWords wrds = filter isAlpha $ toLower <$> concat wrds
 
 
 main :: IO ()
-main = interact $ (++"%") . show . computeVowelPercentage . collectLetters
+main = interact $ (++"%") . show . computeVowelPercentage . normalizeWords . filterLongWords
