@@ -10,11 +10,9 @@ import Graphics.Gloss.Interface.IO.Interact
 import Shapes
 
 {- The state of the world is represented simply with a single number -}
-initialWorld :: Integer
-initialWorld = 5
+initialWorld :: Shape
+initialWorld = Square (0,0) 150 yellow
 
-{- This function draws the world (integer `n`) as a Gloss `Picture` type.
- - (see the documentation for the Picture type on Hoogle.) -}
 drawWorld :: Integer -> Picture
 drawWorld n =
   Color black
@@ -22,11 +20,9 @@ drawWorld n =
     $ flip map [1 .. n] $ \i ->
     Translate (100 * fromInteger i - 550) 0 $ Pictures [ThickCircle 50 10]
 
-{- This function changes the world (integer `n`) based on an incoming event, in
- - our case arrow keys being pressed.a -}
-handleEvent :: (Ord a, Num a) => Event -> a -> a
-handleEvent (EventKey (SpecialKey KeyLeft) Down _ _) n = max 0 $ n - 1
-handleEvent (EventKey (SpecialKey KeyRight) Down _ _) n = min 10 $ n + 1
+handleEvent :: Event -> Shape -> Shape
+handleEvent (EventKey (SpecialKey KeyLeft) Down _ _) s = move L s
+handleEvent (EventKey (SpecialKey KeyRight) Down _ _) s = move R s
 handleEvent _ n = n -- we ignore all other events
 
 updateWorld :: p -> a -> a
@@ -41,5 +37,5 @@ myWindow :: Display
 myWindow = InWindow "tadyto je muj program" (800, 600) (100, 80)
 
 main :: IO ()
--- main = play myWindow white 25 initialWorld drawWorld handleEvent updateWorld
-main = display myWindow white myPicture
+main = play myWindow white 25 initialWorld draw handleEvent updateWorld
+-- main = display myWindow white myPicture
