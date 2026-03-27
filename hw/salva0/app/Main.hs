@@ -11,7 +11,7 @@ filterLongWords :: String -> [String]
 filterLongWords = filter ((>= 3) . length) . words
 
 normalizeWords :: [String] -> String
-normalizeWords wrds = filter isAlpha $ toLower <$> concat wrds
+normalizeWords =  filter isAlpha . fmap toLower . concat
 
 
 main :: IO ()
