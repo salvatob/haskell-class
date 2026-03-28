@@ -1,16 +1,8 @@
--- {-# LANGUAGE InstanceSigs #-}
 module Shapes where
 
--- import Graphics.Gloss.Data.Picture (Point, Picture)
 import Graphics.Gloss
 
-
-
--- class Shape a where
---   draw  :: a -> Picture
-
 type Position = (Float, Float)
--- data Square = Square Color Float (Float, Float)
 
 data Shape =  Square Point Float Color
             | Triangle Point Point Point Color
@@ -26,14 +18,25 @@ drawOutline (Triangle a b c _) = Scale 1.1 1.1 $ Color black $ Line [a,b,c,a]
 
 
 
-data Dir = L|R
-            -- |U|D
+data Dir = L|R|U|D
 
 offset = 50 :: Float
 
+moveOffset :: Dir -> (Float, Float)
+moveOffset L = (-offset, 0)
+moveOffset R = (offset, 0)
+moveOffset U = (0, offset)
+moveOffset D = (0, -offset)
+
+add :: (Num n) => (n,n) -> (n,n) -> (n,n)
+add (a,b) (x,y) = (a+x,b+y)
+
 move :: Dir -> Shape -> Shape
-move R (Square (x, y) size clr) = Square (x+offset, y) size clr
-move R (Triangle (x1,y1) (x2,y2) (x3,y3) clr) = Triangle (x1+offset,y1) (x2+offset,y2) (x3+offset,y3) clr
-move L (Square (x, y) size clr) = Square (x-offset, y) size clr
-move L (Triangle (x1,y1) (x2,y2) (x3,y3) clr) = Triangle (x1-offset,y1) (x2-offset,y2) (x3-offset,y3) clr
+move d (Square p size clr) = Square (p `add` moveOffset d) size clr
+
+
+move d (Triangle p1 p2 p3 clr) = Triangle (p1 `add` moveOffset d) 
+                                          (p2 `add` moveOffset d)
+                                          (p3 `add` moveOffset d)
+                                          clr
 
