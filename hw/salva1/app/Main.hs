@@ -7,35 +7,37 @@ ghc-options: -threaded
 
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Interact
+
 import Shapes
+import World
+
+
 
 {- The state of the world is represented simply with a single number -}
-initialWorld :: Shape
-initialWorld = Square (0,0) 150 yellow
+mySquare :: Shape
+mySquare = Square (-200,-120) 150 blue
+myTri :: Shape
+myTri = Triangle (0,0) (100,-50) (50, 100) red
 
-drawWorld :: Integer -> Picture
-drawWorld n =
-  Color black
-    $ Pictures
-    $ flip map [1 .. n] $ \i ->
-    Translate (100 * fromInteger i - 550) 0 $ Pictures [ThickCircle 50 10]
+initialWorld :: World
+initialWorld = World [mySquare, myTri] 1
 
-handleEvent :: Event -> Shape -> Shape
-handleEvent (EventKey (SpecialKey KeyLeft) Down _ _) s = move L s
-handleEvent (EventKey (SpecialKey KeyRight) Down _ _) s = move R s
+data arrowKey = KeyLeft|Keyright|KeyUp|KeyDown
+
+handleEvent :: Event -> World -> World
+handleEvent (EventKey (SpecialKey KeyTab) Down _ _) w = rotateSelection w
+handleEvent (EventKey (SpecialKey arrowKey) Down _ _) w = rotateSelection w
 handleEvent _ n = n -- we ignore all other events
 
 updateWorld :: p -> a -> a
 updateWorld _ = id
 
-{- Function `play` from gloss connects the functions for managing and drawing
- - the world state and runs them on the initial state, with a selected
- - background color and framerate. All other things are handled by the Gloss
- - library. -}
-
 myWindow :: Display
 myWindow = InWindow "tadyto je muj program" (800, 600) (100, 80)
 
+-- myPicture :: Picture
+-- myPicture = ThickLine (-100,-100) (200, 300) 4
+
 main :: IO ()
-main = play myWindow white 25 initialWorld draw handleEvent updateWorld
+main = play myWindow white 25 initialWorld drawWorld handleEvent updateWorld
 -- main = display myWindow white myPicture

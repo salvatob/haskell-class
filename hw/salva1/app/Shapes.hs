@@ -19,6 +19,13 @@ draw :: Shape -> Picture
 draw (Square (x, y) size clr) = Color clr $ Polygon [(x,y),(x+size,y),(x+size,y+size),(x,y+size)]
 draw (Triangle a b c clr) = Color clr $ Polygon [a,b,c]
 
+
+drawOutline :: Shape -> Picture
+drawOutline (Square (x, y) size _) = Scale 1.1 1.1 $ Color black $ Line [(x,y),(x+size,y),(x+size,y+size),(x,y+size),(x,y)]
+drawOutline (Triangle a b c _) = Scale 1.1 1.1 $ Color black $ Line [a,b,c,a]
+
+
+
 data Dir = L|R
             -- |U|D
 
