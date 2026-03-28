@@ -21,7 +21,7 @@ myTri = Triangle (0,0) (100,-50) (50, 100) red
 
 initialWorld :: World
 initialWorld = World [
-  Square 
+  -- Square 
   mySquare,
    myTri
   

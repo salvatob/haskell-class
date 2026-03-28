@@ -1,6 +1,6 @@
 module Constants where
 
-smallSide = 200 :: FLoat
-windowWidth = 4 * smallSide :: Float 
-windowHeight = 3 * smallSide :: Float
+smallSide = 200 :: Int
+windowWidth = 4 * smallSide :: Int 
+windowHeight = 3 * smallSide :: Int
 
