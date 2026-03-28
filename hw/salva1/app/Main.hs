@@ -13,20 +13,12 @@ import World
 import Constants
 
 
-{- The state of the world is represented simply with a single number -}
-mySquare :: Shape
-mySquare = Square (-200,-120) 150 blue
-myTri :: Shape
-myTri = Triangle (0,0) (100,-50) (50, 100) red
-
 initialWorld :: World
 initialWorld = World [
-  -- Square 
-  mySquare,
-   myTri
+  Square (1,1) 1 blue,
+  Triangle (0,0) (1,0) (0, 1) red
   
-  ]
-   0
+  ] 0
 
 handleEvent :: Event -> World -> World
 handleEvent (EventKey (SpecialKey KeyTab) Down _ _) w = rotateSelection w
@@ -46,4 +38,4 @@ myWindow = InWindow "tadyto je muj program" (windowWidth, windowHeight) (100, 80
 
 main :: IO ()
 main = play myWindow white 25 initialWorld drawWorld handleEvent updateWorld
--- main = display myWindow white myPicture
+-- main = display myWindow white (Line [(0,0), (100, 200)])
