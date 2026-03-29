@@ -1,23 +1,20 @@
-
 module Main where
+
 {- cabal:
 build-depends: base, gloss
 ghc-options: -threaded
 -}
-
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Interact
 
+import Constants
 import Shapes
 import World
-import Constants
-
 
 initialWorld :: World
 initialWorld = World [
-  Square (1,1) 1 blue,
-  Triangle (0,0) (1,0) (0, 1) red
-  
+  Square (1, 1) 1 blue,
+  Triangle (0, 0) (1, 0) (0, 1) red
   ] 0
 
 handleEvent :: Event -> World -> World
