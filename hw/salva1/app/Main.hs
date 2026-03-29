@@ -13,8 +13,12 @@ import World
 
 initialWorld :: World
 initialWorld = World [
-  Square (1, 1) 1 blue,
-  Triangle (0, 0) (1, 0) (0, 1) red
+  Square (0, 2) 1 violet,
+  Square (1, 1) 1 red,
+  Triangle (2, 0) (3, 0) (2, 1) green,
+  Triangle (3, 0) (4, 0) (4, 1) azure,
+  Triangle (4, 1) (4, 3) (3, 2) orange,
+  Parallel (1,3) (2,2) 1 rose 
   ] 0
 
 handleEvent :: Event -> World -> World
