@@ -4,7 +4,7 @@ import Graphics.Gloss
 import Shapes
 
 data World =
-  World [Shape] Int Bool
+  World [Sprite] Int Bool
 
 -- increment the index of the selected shape
 rotateSelection :: World -> World
