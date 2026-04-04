@@ -18,6 +18,7 @@ initialSprites = [
     , smallSquare red (1, 1) 
     ,
      smallTriangle yellow (2, 2) 0
+     , largeTriangle orange (2, 1) 0
     -- , rotateSprite $ smallTriangle red (2, 2) 0
     , rotateSprite $ rotateSprite $ smallTriangle green (2, 2) 0
     -- , rotateSprite $ rotateSprite $ rotateSprite $ smallTriangle blue (2, 2) 0

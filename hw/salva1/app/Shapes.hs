@@ -25,6 +25,10 @@ smallTriangle :: Color -> IntPoint -> Float -> Sprite
 smallTriangle c p r =
   Sprite {shape = Triangle (0, 1) (1, 0), position = p, clr = c, rotation = r}
 
+largeTriangle :: Color -> IntPoint -> Float -> Sprite
+largeTriangle c p r =
+  move D Sprite {shape = Triangle (1, 1) (1, -1), position = p, clr = c, rotation = r}
+
 --TODO make parallel constructor function
 
 
