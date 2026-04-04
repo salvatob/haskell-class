@@ -8,19 +8,19 @@ import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Interact
 
 import Constants
-import Graphics.Gloss.Interface.IO.Game (SpecialKey(KeySpace))
 import Shapes
 import World
 
 initialWorld :: World
 initialWorld =
   World
-    [ Square (0, 2) 1 violet
-    , Square (1, 1) 1 red
-    , Triangle (2, 0) (3, 0) (2, 1) green
-    , Triangle (3, 0) (4, 0) (4, 1) azure
-    , Triangle (4, 1) (4, 3) (3, 2) orange
-    , Parallel (1, 3) (2, 2) 1 rose
+    [ smallSquare violet (2, 2) 
+    -- , smallSquare red (1, 1) 
+    -- , Square (1, 1) 1 red
+    -- , Triangle (2, 0) (3, 0) (2, 1) green
+    -- , Triangle (3, 0) (4, 0) (4, 1) azure
+    -- , Triangle (4, 1) (4, 3) (3, 2) orange
+    -- , Parallel (1, 3) (2, 2) 1 rose
     ]
     0
     False
@@ -38,6 +38,10 @@ myWindow :: Display
 myWindow =
   InWindow "tadyto je muj program" (windowWidth, windowHeight) (100, 80)
 
+mySprite :: Sprite
+mySprite = smallSquare green (2,1)
+
 main :: IO ()
-main = play myWindow white 25 initialWorld drawWorld handleEvent (const id)
--- main = display myWindow white $ Color blue $ Color green $ Line [(0,0), (100, 200)]
+-- main = play myWindow white 25 initialWorld drawWorld handleEvent (const id)
+-- main = display myWindow white $ Color blue $ Color green $ Line [(0,0), (390, 290)]
+main = display myWindow white $ draw mySprite
