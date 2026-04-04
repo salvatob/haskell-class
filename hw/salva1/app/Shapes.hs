@@ -56,7 +56,6 @@ draw :: Sprite -> Picture
 draw (Sprite s (x, y) c r) =
   Color c
     $ Translate (fromIntegral (x * unitSize)) (-fromIntegral (y * unitSize))
-    $ Rotate r
     $ drawShape s
 
 data Dir
@@ -79,3 +78,11 @@ add (a, b) (x, y) = (a + x, b + y)
 -- just add the offset to the position
 move :: Dir -> Sprite -> Sprite
 move d s = s {position = position s `add` moveOffset d}
+
+
+rotateShape :: Shape -> Shape
+rotateShape (Triangle (x1,y1) (x2,y2) ) = Triangle (-y1, x1) (-y2, x2)
+rotateShape s = s 
+
+rotateSprite :: Sprite -> Sprite
+rotateSprite s = s {shape = rotateShape (shape s)}

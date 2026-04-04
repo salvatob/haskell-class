@@ -14,9 +14,15 @@ import World
 initialWorld :: World
 initialWorld =
   World
-    [ smallSquare violet (2, 2) 
+    [
+      --  smallSquare violet (2, 2) 
     -- , smallSquare red (1, 1) 
     -- , Square (1, 1) 1 red
+    -- ,
+     smallTriangle yellow (2, 2) 0
+    , rotateSprite $ smallTriangle red (2, 2) 0
+    , rotateSprite $ rotateSprite $ smallTriangle green (2, 2) 0
+    , rotateSprite $ rotateSprite $ rotateSprite $ smallTriangle blue (2, 2) 0
     -- , Triangle (2, 0) (3, 0) (2, 1) green
     -- , Triangle (3, 0) (4, 0) (4, 1) azure
     -- , Triangle (4, 1) (4, 3) (3, 2) orange
@@ -39,9 +45,12 @@ myWindow =
   InWindow "tadyto je muj program" (windowWidth, windowHeight) (100, 80)
 
 mySprite :: Sprite
-mySprite = smallSquare green (2,1)
+-- mySprite = smallSquare green (2,1)
+mySprite = 
+  -- rotateSprite $
+  smallTriangle red (1,1) 90
 
 main :: IO ()
--- main = play myWindow white 25 initialWorld drawWorld handleEvent (const id)
+main = play myWindow white 25 initialWorld drawWorld handleEvent (const id)
 -- main = display myWindow white $ Color blue $ Color green $ Line [(0,0), (390, 290)]
-main = display myWindow white $ draw mySprite
+-- main = display myWindow white $ draw mySprite
