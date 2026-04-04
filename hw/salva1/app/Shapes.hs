@@ -54,8 +54,8 @@ drawShape :: Shape -> Picture
 drawShape (Square size) =
     Polygon
     $  trace ("full coords="++show coords) coords
-  where coords = 
-          translateCoordinates <$> [(0,0), (size,0), (size,size), (0,size)]
+  where coords =
+          translateCoordinates <$> [(0,0), (size, 0), (size, size), (0, size)]
 
 drawShape (Triangle b c) =
   Polygon $
@@ -68,11 +68,14 @@ drawShape (Parallel (x2, y2) len) =
 
 
 draw :: Sprite -> Picture
-draw (Sprite s p c r) = 
-  trace ("x,y="++ show (x,y)) $
-  Color c $ Translate x y $ Rotate r $ drawShape s
+draw (Sprite s (x,y) c r) =
+  -- trace ("x,y="++ show (x,(-y))) $
+  Color c $
+  Translate ( fromIntegral (x*unitSize)) (-fromIntegral (y*unitSize)) $
+  Rotate r $
+  drawShape s
   where
-    (x,y) = translateCoordinates p
+    -- (x,y) = translateCoordinates p
 
 
 data Dir
