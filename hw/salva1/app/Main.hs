@@ -14,13 +14,14 @@ import World
 
 initialSprites :: [Sprite]
 initialSprites = [
-       smallSquare violet (2, 2) 
-    , smallSquare red (1, 1) 
-    ,
-     smallTriangle yellow (2, 2) 0
-     , largeTriangle orange (2, 1) 0
+      --  smallSquare violet (2, 2) 
+    -- , smallSquare red (1, 1) 
+    -- , smallTriangle yellow (2, 2)
+    --  , largeTriangle orange (2, 1)
     -- , rotateSprite $ smallTriangle red (2, 2) 0
-    , rotateSprite $ rotateSprite $ smallTriangle green (2, 2) 0
+    -- , rotateSprite $ rotateSprite $ smallTriangle green (2, 2)
+    -- , 
+    parallelogram chartreuse (0,0) (1,1) (1,0)
     -- , rotateSprite $ rotateSprite $ rotateSprite $ smallTriangle blue (2, 2) 0
     -- , Triangle (2, 0) (3, 0) (2, 1) green
     -- , Triangle (3, 0) (4, 0) (4, 1) azure
@@ -61,7 +62,7 @@ mySprite :: Sprite
 -- mySprite = smallSquare green (2,1)
 mySprite =
   -- rotateSprite $
-  smallTriangle red (1,1) 90
+  smallTriangle red (1,1)
 
 main :: IO ()
 main = play myWindow white 25 initialWorld drawWorld handleEvent (const id)

@@ -1,7 +1,6 @@
 module Shapes where
 
 import Constants
-import Debug.Trace
 import Graphics.Gloss
 
 type IntPoint = (Int, Int)
@@ -9,28 +8,30 @@ type IntPoint = (Int, Int)
 data Shape
   = Square Int -- only size is specified, renders with 
   | Triangle IntPoint IntPoint -- first point is always (0,0), two more are specified
-  | Parallel IntPoint Int -- first point is (0,0), second is specified, then the line is filled horizontally into a full parallelogram
+  -- implicit point a is (0,0), specifying two other will result in a parallelogram.
+  -- last point is calculated as a vector sum b + c
+  | Parallel IntPoint IntPoint 
+
 
 data Sprite = Sprite
   { shape :: Shape
   , position :: IntPoint
   , clr :: Color
-  , rotation :: Float
   }
 
 smallSquare :: Color -> IntPoint -> Sprite
-smallSquare c p = Sprite {shape = Square 1, position = p, clr = c, rotation = 0}
+smallSquare c p = Sprite {shape = Square 1, position = p, clr = c}
 
-smallTriangle :: Color -> IntPoint -> Float -> Sprite
-smallTriangle c p r =
-  Sprite {shape = Triangle (0, 1) (1, 0), position = p, clr = c, rotation = r}
+smallTriangle :: Color -> IntPoint -> Sprite
+smallTriangle c p =
+  Sprite {shape = Triangle (0, 1) (1, 0), position = p, clr = c}
 
-largeTriangle :: Color -> IntPoint -> Float -> Sprite
-largeTriangle c p r =
-  move D Sprite {shape = Triangle (1, 1) (1, -1), position = p, clr = c, rotation = r}
+largeTriangle :: Color -> IntPoint -> Sprite
+largeTriangle c p =
+  move D Sprite {shape = Triangle (1, 1) (1, -1), position = p, clr = c}
 
---TODO make parallel constructor function
-
+parallelogram :: Color -> IntPoint -> IntPoint -> IntPoint -> Sprite
+parallelogram c pos p1 p2 = Sprite (Parallel p1 p2) pos c
 
 
 -- My coordinates are in Ints,
@@ -52,12 +53,12 @@ drawShape (Square size) =
 drawShape (Triangle b c) = Polygon $ translateCoordinates <$> [(0, 0) , b, c]
 
 
-drawShape (Parallel (x2, y2) len) =
+drawShape (Parallel (x1, y1) (x2, y2)) =
   Polygon
-    $ translateCoordinates <$> [(0, 0), (x2, y2), (x2 + len, y2), (len, 0)]
+    $ translateCoordinates <$> [(0, 0), (x1, y1), (x1+x2 , y1+y2), (x2,y2)]
 
 draw :: Sprite -> Picture
-draw (Sprite s (x, y) c r) =
+draw (Sprite s (x, y) c) =
   Color c
     $ Translate (fromIntegral (x * unitSize)) (-fromIntegral (y * unitSize))
     $ drawShape s
@@ -83,17 +84,23 @@ add (a, b) (x, y) = (a + x, b + y)
 move :: Dir -> Sprite -> Sprite
 move d s = s {position = position s `add` moveOffset d}
 
+rotP :: IntPoint -> IntPoint
+rotP (x,y) = (-y,x)
 
 rotateShape :: Shape -> Shape
-rotateShape (Triangle (x1,y1) (x2,y2) ) = Triangle (-y1, x1) (-y2, x2)
+rotateShape (Triangle b c ) = Triangle (rotP b) (rotP c)
+rotateShape (Parallel b c ) = Parallel (rotP b) (rotP c)
 rotateShape s = s
 
 rotateSprite :: Sprite -> Sprite
 rotateSprite s = s {shape = rotateShape (shape s)}
 
+flipP :: IntPoint -> IntPoint
+flipP (x,y) = (-x,y)
+
 flipShape :: Shape -> Shape
-flipShape (Triangle (x1,y1) (x2,y2) ) = Triangle (-x1,y1) (-x2,y2)
-flipShape (Parallel (x,y) s) = Parallel (-x, y) (-s)
+flipShape (Triangle a b ) = Triangle (flipP a) (flipP b)
+flipShape (Parallel a b ) = Parallel (flipP a) (flipP b)
 flipShape s = s
 
 flipSprite :: Sprite -> Sprite
