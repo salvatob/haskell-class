@@ -11,33 +11,45 @@ import Constants
 import Shapes
 import World
 
-initialWorld :: World
-initialWorld =
-  World
-    [
-      --  smallSquare violet (2, 2) 
-    -- , smallSquare red (1, 1) 
-    -- , Square (1, 1) 1 red
-    -- ,
+
+initialSprites :: [Sprite]
+initialSprites = [
+       smallSquare violet (2, 2) 
+    , smallSquare red (1, 1) 
+    ,
      smallTriangle yellow (2, 2) 0
-    , rotateSprite $ smallTriangle red (2, 2) 0
+    -- , rotateSprite $ smallTriangle red (2, 2) 0
     , rotateSprite $ rotateSprite $ smallTriangle green (2, 2) 0
-    , rotateSprite $ rotateSprite $ rotateSprite $ smallTriangle blue (2, 2) 0
+    -- , rotateSprite $ rotateSprite $ rotateSprite $ smallTriangle blue (2, 2) 0
     -- , Triangle (2, 0) (3, 0) (2, 1) green
     -- , Triangle (3, 0) (4, 0) (4, 1) azure
     -- , Triangle (4, 1) (4, 3) (3, 2) orange
     -- , Parallel (1, 3) (2, 2) 1 rose
     ]
-    0
-    False
+
+
+initialWorld :: World
+initialWorld = World initialSprites (length initialSprites)    False
+
+-- applies f  n-times
+repeatF :: (b -> b) -> Int -> b -> b
+repeatF f n = foldr (.) id (replicate n f)
 
 handleEvent :: Event -> World -> World
 handleEvent (EventKey (SpecialKey KeyTab) Down _ _) w = rotateSelection w
 handleEvent (EventKey (SpecialKey KeySpace) Down _ _) w = handlePickUp w
-handleEvent (EventKey (SpecialKey KeyUp) Down _ _) w = moveSelected U w
-handleEvent (EventKey (SpecialKey KeyDown) Down _ _) w = moveSelected D w
-handleEvent (EventKey (SpecialKey KeyLeft) Down _ _) w = moveSelected L w
-handleEvent (EventKey (SpecialKey KeyRight) Down _ _) w = moveSelected R w
+
+handleEvent (EventKey (SpecialKey KeyUp) Down _ _) w = changeSelected (move U) w
+handleEvent (EventKey (SpecialKey KeyDown) Down _ _) w = changeSelected (move D) w
+handleEvent (EventKey (SpecialKey KeyLeft) Down _ _) w = changeSelected (move L) w
+handleEvent (EventKey (SpecialKey KeyRight) Down _ _) w = changeSelected (move R) w
+
+handleEvent (EventKey (Char 'c') Down _ _) w = changeSelected rotateSprite w
+handleEvent (EventKey (Char 'z') Down _ _) w = changeSelected (repeatF rotateSprite 3) w
+
+handleEvent (EventKey (Char 'v') Down _ _) w = changeSelected flipSprite w
+
+
 handleEvent _ n = n -- we ignore all other events
 
 myWindow :: Display
@@ -46,7 +58,7 @@ myWindow =
 
 mySprite :: Sprite
 -- mySprite = smallSquare green (2,1)
-mySprite = 
+mySprite =
   -- rotateSprite $
   smallTriangle red (1,1) 90
 

@@ -82,7 +82,16 @@ move d s = s {position = position s `add` moveOffset d}
 
 rotateShape :: Shape -> Shape
 rotateShape (Triangle (x1,y1) (x2,y2) ) = Triangle (-y1, x1) (-y2, x2)
-rotateShape s = s 
+rotateShape s = s
 
 rotateSprite :: Sprite -> Sprite
 rotateSprite s = s {shape = rotateShape (shape s)}
+
+flipShape :: Shape -> Shape
+flipShape (Triangle (x1,y1) (x2,y2) ) = Triangle (-x1,y1) (-x2,y2)
+flipShape (Parallel (x,y) s) = Parallel (-x, y) (-s)
+flipShape s = s
+
+flipSprite :: Sprite -> Sprite
+flipSprite s = s { shape = flipShape $ shape s }
+

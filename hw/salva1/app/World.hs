@@ -29,6 +29,16 @@ moveSelected d (World s i True)
   where
     newS = changeAt (move d) i s
 
+
+changeSelected :: (Sprite -> Sprite) -> World -> World
+changeSelected _ (World s i False) = World s i False -- if shape is not picked up, dont do anything
+changeSelected f (World sprite i True)
+  | i >= length sprite = World sprite i True -- selected index in not on any shape
+  | otherwise = World newS i True
+  where
+    newS = changeAt f i sprite
+
+
 drawWorld :: World -> Picture
 drawWorld (World shapes i _)
   | i >= length shapes = Pictures shape_drawings
