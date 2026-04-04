@@ -1,9 +1,8 @@
 module Shapes where
 
 import Constants
-import Graphics.Gloss
 import Debug.Trace
-
+import Graphics.Gloss
 
 type IntPoint = (Int, Int)
 
@@ -12,36 +11,27 @@ data Shape
   | Triangle IntPoint IntPoint -- first point is always (0,0), two more are specified
   | Parallel IntPoint Int -- first point is (0,0), second is specified, then the line is filled horizontally into a full parallelogram
 
-
 data Sprite = Sprite
-  {
-    shape :: Shape,
-    position :: IntPoint,
-    clr :: Color,
-    rotation :: Float
+  { shape :: Shape
+  , position :: IntPoint
+  , clr :: Color
+  , rotation :: Float
   }
 
 smallSquare :: Color -> IntPoint -> Sprite
-smallSquare c p = Sprite {
-  shape = Square 1,
-  position = p,
-  clr = c,
-  rotation = 0
-}
+smallSquare c p = Sprite {shape = Square 1, position = p, clr = c, rotation = 0}
 
 smallTriangle :: Color -> IntPoint -> Float -> Sprite
-smallTriangle c p r = Sprite {
-  shape = Triangle (0,1) (1,0),
-  position = p,
-  clr = c,
-  rotation = r
-}
+smallTriangle c p r =
+  Sprite {shape = Triangle (0, 1) (1, 0), position = p, clr = c, rotation = r}
 
 --TODO make parallel constructor function
 
+
+
 -- My coordinates are in Ints,
--- (0,0) starts at top left corner instead of middle
--- And the unit is defined as a size of a small square, that is relative to the window size
+-- (0,0) starts at top left corner instead of middle, y increasing goes down
+-- and the unit is defined as a size of a small square, that is relative to the window size
 translateCoordinates :: IntPoint -> Point
 translateCoordinates (x, y) =
   ( fromIntegral $ (x * unitSize) - windowWidth `div` 2
@@ -52,31 +42,22 @@ addC :: Num b => (b, b) -> b -> (b, b)
 
 drawShape :: Shape -> Picture
 drawShape (Square size) =
-    Polygon
-    $  trace ("full coords="++show coords) coords
-  where coords =
-          translateCoordinates <$> [(0,0), (size, 0), (size, size), (0, size)]
+  Polygon
+    $ translateCoordinates <$> [(0, 0), (size, 0), (size, size), (0, size)]
 
-drawShape (Triangle b c) =
-  Polygon $
-  translateCoordinates <$> [(0,0), b, c]
+drawShape (Triangle b c) = Polygon $ translateCoordinates <$> [(0, 0) , b, c]
+
 
 drawShape (Parallel (x2, y2) len) =
-   Polygon
-    $ translateCoordinates
-        <$> [(0, 0), (x2, y2), (x2 + len, y2), (len, 0)]
-
+  Polygon
+    $ translateCoordinates <$> [(0, 0), (x2, y2), (x2 + len, y2), (len, 0)]
 
 draw :: Sprite -> Picture
-draw (Sprite s (x,y) c r) =
-  -- trace ("x,y="++ show (x,(-y))) $
-  Color c $
-  Translate ( fromIntegral (x*unitSize)) (-fromIntegral (y*unitSize)) $
-  Rotate r $
-  drawShape s
-  where
-    -- (x,y) = translateCoordinates p
-
+draw (Sprite s (x, y) c r) =
+  Color c
+    $ Translate (fromIntegral (x * unitSize)) (-fromIntegral (y * unitSize))
+    $ Rotate r
+    $ drawShape s
 
 data Dir
   = L
@@ -97,5 +78,4 @@ add (a, b) (x, y) = (a + x, b + y)
 
 -- just add the offset to the position
 move :: Dir -> Sprite -> Sprite
-move d s = s {position = position s `add` moveOffset d }
-
+move d s = s {position = position s `add` moveOffset d}
