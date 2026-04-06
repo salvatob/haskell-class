@@ -5,16 +5,17 @@ build-depends: base, gloss
 ghc-options: -threaded
 -}
 import Graphics.Gloss
-import Graphics.Gloss.Interface.IO.Interact
 import Graphics.Gloss.Interface.IO.Game
+import Graphics.Gloss.Interface.IO.Interact
 
-import Constants
-import Shapes
-import World
-import Helpers
-import Serialization
 import Debug.Trace (trace)
 import System.Exit (exitSuccess)
+
+import Serialization
+import Constants
+import Helpers
+import Shapes
+import World
 
 initialSprites :: [Sprite]
 initialSprites =
@@ -74,8 +75,8 @@ handleEventIO (EventKey (Char 's') Down _ _) w = do
 handleEventIO (EventKey (Char 'l') Down _ _) _ = loadWorld saveFile
 
 -- exit on pressing ESCAPE
-handleEventIO (EventKey (SpecialKey KeyEsc) Down _ _) _ = do exitSuccess
-
+handleEventIO (EventKey (SpecialKey KeyEsc) Down _ _) _ = do
+  exitSuccess
 -- wrap normal events into IO
 handleEventIO e w = pure $ handleEvent e w
 

@@ -1,10 +1,11 @@
 {-# LANGUAGE InstanceSigs #-}
+
 module Serialization where
 
 import Graphics.Gloss.Data.Color
 
-newtype SRColor = SRColor Color
-
+newtype SRColor =
+  SRColor Color
 
 instance Show SRColor where
   show :: SRColor -> String

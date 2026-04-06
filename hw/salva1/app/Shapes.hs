@@ -23,12 +23,9 @@ data Sprite = Sprite
   { shape :: Shape
   , position :: IntPoint
   , clr :: SRColor
-  }
-  deriving (Show, Read)
-
+  } deriving (Show, Read)
 
 -- some nice sprite construction helpers
-
 smallSquare :: Color -> IntPoint -> Sprite
 smallSquare c p = Sprite {shape = Square 1, position = p, clr = SRColor c}
 
@@ -63,13 +60,12 @@ drawShape (Square size) =
 drawShape (Triangle b c) = Polygon $ translateCoordinates <$> [(0, 0), b, c]
 
 drawShape (Parallel c d) =
-  Polygon
-    $ translateCoordinates <$> [(0, 0), c, c `add` d, d]
+  Polygon $ translateCoordinates <$> [(0, 0), c, c `add` d, d]
 
 draw :: Sprite -> Picture
 draw (Sprite s (x, y) (SRColor c)) =
   Color c
-    $ Translate (fromIntegral (x * unitSize)) (- fromIntegral (y * unitSize))
+    $ Translate (fromIntegral (x * unitSize)) (-fromIntegral (y * unitSize))
     $ drawShape s
 
 data Dir
@@ -98,7 +94,6 @@ rotateShape s = s
 
 rotateSprite :: Sprite -> Sprite
 rotateSprite s = s {shape = rotateShape (shape s)}
-
 
 flipShape :: Shape -> Shape
 flipShape (Triangle a b) = Triangle (flipP a) (flipP b)
