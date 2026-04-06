@@ -10,8 +10,7 @@ data Shape
   | Triangle IntPoint IntPoint -- first point is always (0,0), two more are specified
   -- implicit point a is (0,0), specifying two other will result in a parallelogram.
   -- last point is calculated as a vector sum b + c
-  | Parallel IntPoint IntPoint 
-
+  | Parallel IntPoint IntPoint
 
 data Sprite = Sprite
   { shape :: Shape
@@ -48,13 +47,10 @@ drawShape :: Shape -> Picture
 drawShape (Square size) =
   Polygon
     $ translateCoordinates <$> [(0, 0), (size, 0), (size, size), (0, size)]
-
-drawShape (Triangle b c) = Polygon $ translateCoordinates <$> [(0, 0) , b, c]
-
-
+drawShape (Triangle b c) = Polygon $ translateCoordinates <$> [(0, 0), b, c]
 drawShape (Parallel (x1, y1) (x2, y2)) =
   Polygon
-    $ translateCoordinates <$> [(0, 0), (x1, y1), (x1+x2 , y1+y2), (x2,y2)]
+    $ translateCoordinates <$> [(0, 0), (x1, y1), (x1 + x2, y1 + y2), (x2, y2)]
 
 draw :: Sprite -> Picture
 draw (Sprite s (x, y) c) =
@@ -84,24 +80,23 @@ move :: Dir -> Sprite -> Sprite
 move d s = s {position = position s `add` moveOffset d}
 
 rotP :: IntPoint -> IntPoint
-rotP (x,y) = (-y,x)
+rotP (x, y) = (-y, x)
 
 rotateShape :: Shape -> Shape
-rotateShape (Triangle b c ) = Triangle (rotP b) (rotP c)
-rotateShape (Parallel b c ) = Parallel (rotP b) (rotP c)
+rotateShape (Triangle b c) = Triangle (rotP b) (rotP c)
+rotateShape (Parallel b c) = Parallel (rotP b) (rotP c)
 rotateShape s = s
 
 rotateSprite :: Sprite -> Sprite
 rotateSprite s = s {shape = rotateShape (shape s)}
 
 flipP :: IntPoint -> IntPoint
-flipP (x,y) = (-x,y)
+flipP (x, y) = (-x, y)
 
 flipShape :: Shape -> Shape
-flipShape (Triangle a b ) = Triangle (flipP a) (flipP b)
-flipShape (Parallel a b ) = Parallel (flipP a) (flipP b)
+flipShape (Triangle a b) = Triangle (flipP a) (flipP b)
+flipShape (Parallel a b) = Parallel (flipP a) (flipP b)
 flipShape s = s
 
 flipSprite :: Sprite -> Sprite
-flipSprite s = s { shape = flipShape $ shape s }
-
+flipSprite s = s {shape = flipShape $ shape s}

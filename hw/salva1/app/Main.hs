@@ -11,7 +11,6 @@ import Constants
 import Shapes
 import World
 
-
 initialSprites :: [Sprite]
 initialSprites =
   [ smallSquare violet (0, 2)
@@ -27,7 +26,6 @@ initialSprites =
     -- , Triangle (4, 1) (4, 3) (3, 2) orange
     -- , Parallel (1, 3) (2, 2) 1 rose
   ]
-
 
 initialWorld :: World
 initialWorld = World initialSprites (length initialSprites) False
