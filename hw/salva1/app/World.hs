@@ -2,6 +2,7 @@ module World where
 
 import Graphics.Gloss
 import Shapes
+import Helpers
 
 data World =
   World [Sprite] Int Bool
@@ -16,10 +17,6 @@ rotateSelection (World s i p) = World s i p -- if a shape is selected, do not ro
 handlePickUp :: World -> World
 handlePickUp (World s i picked) = World s i (not picked)
 
--- util for moving a shape by index
-changeAt :: (a -> a) -> Int -> [a] -> [a]
-changeAt _ _ [] = []
-changeAt f i l = take i l ++ (f (l !! i)) : drop (i + 1) l
 
 moveSelected :: Dir -> World -> World
 moveSelected _ (World s i False) = World s i False -- if shape is not picked up, dont do anything

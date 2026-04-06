@@ -10,29 +10,24 @@ import Graphics.Gloss.Interface.IO.Interact
 import Constants
 import Shapes
 import World
+import Helpers
+
 
 initialSprites :: [Sprite]
 initialSprites =
+-- sprites can be created either with thece nice constructors
   [ smallSquare violet (0, 2)
-  , smallSquare red (1, 1)
+-- or from scratch
+  , Sprite (Square 1) (1, 1) red
   , smallTriangle green (2, 0)
   , rotateSprite $ smallTriangle cyan (4, 0)
   , largeTriangle orange (3, 1)
-    -- , rotateSprite $ rotateSprite $ smallTriangle green (2, 2)
   , parallelogram rose (2, 2) ((-1, 1), (1, 0))
-    -- , rotateSprite $ rotateSprite $ rotateSprite $ smallTriangle blue (2, 2)
-    -- , Triangle (2, 0) (3, 0) (2, 1) green
-    -- , Triangle (3, 0) (4, 0) (4, 1) azure
-    -- , Triangle (4, 1) (4, 3) (3, 2) orange
-    -- , Parallel (1, 3) (2, 2) 1 rose
   ]
 
 initialWorld :: World
 initialWorld = World initialSprites (length initialSprites) False
 
--- applies f  n-times
-repeatF :: (b -> b) -> Int -> b -> b
-repeatF f n = foldr (.) id (replicate n f)
 
 handleEvent :: Event -> World -> World
 handleEvent (EventKey (SpecialKey KeyTab) Down _ _) w = rotateSelection w

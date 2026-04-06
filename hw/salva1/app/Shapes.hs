@@ -2,14 +2,18 @@ module Shapes where
 
 import Constants
 import Graphics.Gloss
+import Helpers
 
 type IntPoint = (Int, Int)
 
 data Shape
-  = Square Int -- only size is specified, renders with 
-  | Triangle IntPoint IntPoint -- first point is always (0,0), two more are specified
+  = Square Int -- only size is specified 
+
+  -- first point is always (0,0), two more are specified
+  | Triangle IntPoint IntPoint
+
   -- implicit point a is (0,0), specifying two other will result in a parallelogram.
-  -- last point is calculated as a vector sum b + c
+  -- last point is calculated as a vector sum of points b, c
   | Parallel IntPoint IntPoint
 
 data Sprite = Sprite
@@ -40,17 +44,16 @@ translateCoordinates (x, y) =
   ( fromIntegral $ (x * unitSize) - windowWidth `div` 2
   , fromIntegral $ windowHeight `div` 2 - (y * unitSize))
 
-addC :: Num b => (b, b) -> b -> (b, b)
-(x, y) `addC` a = (x + a, y + a)
-
 drawShape :: Shape -> Picture
 drawShape (Square size) =
   Polygon
     $ translateCoordinates <$> [(0, 0), (size, 0), (size, size), (0, size)]
+
 drawShape (Triangle b c) = Polygon $ translateCoordinates <$> [(0, 0), b, c]
-drawShape (Parallel (x1, y1) (x2, y2)) =
+
+drawShape (Parallel c d) =
   Polygon
-    $ translateCoordinates <$> [(0, 0), (x1, y1), (x1 + x2, y1 + y2), (x2, y2)]
+    $ translateCoordinates <$> [(0, 0), c, c `add` d, d]
 
 draw :: Sprite -> Picture
 draw (Sprite s (x, y) c) =
@@ -72,15 +75,9 @@ moveOffset R = (offset, 0)
 moveOffset U = (0, -offset)
 moveOffset D = (0, offset)
 
-add :: (Num n) => (n, n) -> (n, n) -> (n, n)
-add (a, b) (x, y) = (a + x, b + y)
-
 -- just add the offset to the position
 move :: Dir -> Sprite -> Sprite
 move d s = s {position = position s `add` moveOffset d}
-
-rotP :: IntPoint -> IntPoint
-rotP (x, y) = (-y, x)
 
 rotateShape :: Shape -> Shape
 rotateShape (Triangle b c) = Triangle (rotP b) (rotP c)
@@ -90,8 +87,6 @@ rotateShape s = s
 rotateSprite :: Sprite -> Sprite
 rotateSprite s = s {shape = rotateShape (shape s)}
 
-flipP :: IntPoint -> IntPoint
-flipP (x, y) = (-x, y)
 
 flipShape :: Shape -> Shape
 flipShape (Triangle a b) = Triangle (flipP a) (flipP b)
