@@ -1,6 +1,7 @@
 module Constants where
 
 -- defines a size of a unit in pixels
+-- program works perfectly well with different window size or more "cells/units" for the shapes 
 unitSize = 200 :: Int
 
 unitWidth = 4 :: Int
@@ -11,6 +12,5 @@ unitHeight = 3 :: Int
 windowWidth = unitWidth * unitSize :: Int
 
 windowHeight = unitHeight * unitSize :: Int
-
 
 type IntPoint = (Int, Int)

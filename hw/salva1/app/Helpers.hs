@@ -19,9 +19,10 @@ changeAt :: (a -> a) -> Int -> [a] -> [a]
 changeAt _ _ [] = []
 changeAt f i l = take i l ++ (f (l !! i)) : drop (i + 1) l
 
-
+-- rotate point clockwise around origin
 rotP :: IntPoint -> IntPoint
 rotP (x, y) = (-y, x)
 
+-- flip point around Y axis
 flipP :: IntPoint -> IntPoint
 flipP (x, y) = (-x, y)

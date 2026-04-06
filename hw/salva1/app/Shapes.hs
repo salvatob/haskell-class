@@ -6,8 +6,9 @@ import Helpers
 import Serialization
 
 
-data Shape
-  = Square Int -- only size is specified 
+data Shape =
+  -- only size is specified 
+  Square Int 
 
   -- first point is always (0,0), two more are specified
   | Triangle IntPoint IntPoint
@@ -25,6 +26,9 @@ data Sprite = Sprite
   }
   deriving (Show, Read)
 
+
+-- some nice sprite construction helpers
+
 smallSquare :: Color -> IntPoint -> Sprite
 smallSquare c p = Sprite {shape = Square 1, position = p, clr = SRColor c}
 
@@ -39,6 +43,8 @@ largeTriangle c p =
 parallelogram :: Color -> IntPoint -> (IntPoint, IntPoint) -> Sprite
 parallelogram c pos (p1, p2) = Sprite (Parallel p1 p2) pos (SRColor c)
 
+
+-- Transforms into Gloss coordinates
 -- My coordinates are in Ints,
 -- (0,0) starts at top left corner instead of middle, y increasing goes down
 -- and the unit is defined as a size of a small square, that is relative to the window size
@@ -46,6 +52,8 @@ translateCoordinates :: IntPoint -> Point
 translateCoordinates (x, y) =
   ( fromIntegral $ (x * unitSize) - windowWidth `div` 2
   , fromIntegral $ windowHeight `div` 2 - (y * unitSize))
+
+
 
 drawShape :: Shape -> Picture
 drawShape (Square size) =
@@ -70,7 +78,8 @@ data Dir
   | U
   | D
 
-offset = 1 :: Int
+offset :: Int
+offset = 1
 
 moveOffset :: Dir -> (Int, Int)
 moveOffset L = (-offset, 0)
@@ -78,7 +87,7 @@ moveOffset R = (offset, 0)
 moveOffset U = (0, -offset)
 moveOffset D = (0, offset)
 
--- just add the offset to the position
+
 move :: Dir -> Sprite -> Sprite
 move d s = s {position = position s `add` moveOffset d}
 
