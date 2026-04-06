@@ -3,9 +3,15 @@ module World where
 import Graphics.Gloss
 import Shapes
 import Helpers
+import Serialization
 
-data World =
-  World [Sprite] Int Bool
+data World = World
+  {
+    shapes :: [Sprite],
+    index :: Int,
+    selected :: Bool
+  }
+  -- World [Sprite] Int Bool
   deriving (Show, Read)
 
 -- increment the index of the selected shape
@@ -19,27 +25,33 @@ handlePickUp :: World -> World
 handlePickUp (World s i picked) = World s i (not picked)
 
 
-moveSelected :: Dir -> World -> World
-moveSelected _ (World s i False) = World s i False -- if shape is not picked up, dont do anything
-moveSelected d (World s i True)
-  | i >= length s = World s i True
-  | otherwise = World newS i True
-  where
-    newS = changeAt (move d) i s
-
 changeSelected :: (Sprite -> Sprite) -> World -> World
 changeSelected _ (World s i False) = World s i False -- if shape is not picked up, dont do anything
 changeSelected f (World sprite i True)
-  | i >= length sprite = World sprite i True -- selected index in not on any shape
+  | i >= length sprite = World sprite i True -- do nothing if index is out of bounds
   | otherwise = World newS i True
   where
     newS = changeAt f i sprite
 
 
+-- highlight sprite so we know what will be moved by player input
+-- Sadly I just color the shape black in all cases, doesn't matter if it's picked up
+-- but i decided to focus on other things than nice rendering  
+highlightSelected :: World -> World
+highlightSelected w = changeSelected (\s -> s {clr = SRColor black}) (w {selected = True})
+
+
 drawWorld :: World -> Picture
-drawWorld (World shapes i _)
-  | i >= length shapes = Pictures shape_drawings
-  | otherwise = Pictures highlight
-  where
-    shape_drawings = map draw shapes
-    highlight = changeAt (\(Color _ s) -> Color black s) i shape_drawings
+drawWorld = Pictures . map draw . shapes . highlightSelected
+
+drawWorldIO :: World -> IO Picture
+drawWorldIO  = pure . drawWorld 
+
+saveWorld :: World -> FilePath -> IO ()
+saveWorld w path = writeFile path (show w)
+
+loadWorld :: FilePath -> IO World
+loadWorld path = do
+  content <- readFile path
+  return $ read content
+
