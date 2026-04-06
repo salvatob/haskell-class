@@ -15,12 +15,15 @@ data Shape
   -- implicit point a is (0,0), specifying two other will result in a parallelogram.
   -- last point is calculated as a vector sum of points b, c
   | Parallel IntPoint IntPoint
+  deriving (Show, Read)
+
 
 data Sprite = Sprite
   { shape :: Shape
   , position :: IntPoint
   , clr :: SRColor
   }
+  deriving (Show, Read)
 
 smallSquare :: Color -> IntPoint -> Sprite
 smallSquare c p = Sprite {shape = Square 1, position = p, clr = SRColor c}
@@ -58,7 +61,7 @@ drawShape (Parallel c d) =
 draw :: Sprite -> Picture
 draw (Sprite s (x, y) (SRColor c)) =
   Color c
-    $ Translate (fromIntegral (x * unitSize)) (-fromIntegral (y * unitSize))
+    $ Translate (fromIntegral (x * unitSize)) (- fromIntegral (y * unitSize))
     $ drawShape s
 
 data Dir

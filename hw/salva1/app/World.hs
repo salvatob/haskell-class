@@ -6,6 +6,7 @@ import Helpers
 
 data World =
   World [Sprite] Int Bool
+  deriving (Show, Read)
 
 -- increment the index of the selected shape
 rotateSelection :: World -> World
@@ -33,6 +34,7 @@ changeSelected f (World sprite i True)
   | otherwise = World newS i True
   where
     newS = changeAt f i sprite
+
 
 drawWorld :: World -> Picture
 drawWorld (World shapes i _)

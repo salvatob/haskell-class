@@ -44,6 +44,7 @@ handleEvent (EventKey (Char 'c') Down _ _) w = changeSelected rotateSprite w
 handleEvent (EventKey (Char 'z') Down _ _) w =
   changeSelected (repeatF rotateSprite 3) w
 handleEvent (EventKey (Char 'v') Down _ _) w = changeSelected flipSprite w
+handleEvent (EventKey (Char 'p') Down _ _) w = trace (show w) w
 handleEvent _ n = n -- we ignore all other events
 
 myWindow :: Display
