@@ -30,9 +30,8 @@ largeTriangle :: Color -> IntPoint -> Sprite
 largeTriangle c p =
   move D Sprite {shape = Triangle (1, 1) (1, -1), position = p, clr = c}
 
-parallelogram :: Color -> IntPoint -> IntPoint -> IntPoint -> Sprite
-parallelogram c pos p1 p2 = Sprite (Parallel p1 p2) pos c
-
+parallelogram :: Color -> IntPoint -> (IntPoint, IntPoint) -> Sprite
+parallelogram c pos (p1, p2) = Sprite (Parallel p1 p2) pos c
 
 -- My coordinates are in Ints,
 -- (0,0) starts at top left corner instead of middle, y increasing goes down
