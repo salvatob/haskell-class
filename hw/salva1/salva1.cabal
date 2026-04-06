@@ -65,7 +65,8 @@ executable salva1
     other-modules:      Shapes,
                         World,
                         Constants,
-                        Helpers
+                        Helpers,
+                        Serialization
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:

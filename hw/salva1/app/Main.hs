@@ -11,14 +11,15 @@ import Constants
 import Shapes
 import World
 import Helpers
-
+import Serialization
+import Debug.Trace (trace)
 
 initialSprites :: [Sprite]
 initialSprites =
 -- sprites can be created either with thece nice constructors
   [ smallSquare violet (0, 2)
 -- or from scratch
-  , Sprite (Square 1) (1, 1) red
+  , Sprite (Square 1) (1, 1) (SRColor red)
   , smallTriangle green (2, 0)
   , rotateSprite $ smallTriangle cyan (4, 0)
   , largeTriangle orange (3, 1)

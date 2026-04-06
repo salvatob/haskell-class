@@ -3,6 +3,7 @@ module Shapes where
 import Constants
 import Graphics.Gloss
 import Helpers
+import Serialization
 
 
 data Shape
@@ -18,22 +19,22 @@ data Shape
 data Sprite = Sprite
   { shape :: Shape
   , position :: IntPoint
-  , clr :: Color
+  , clr :: SRColor
   }
 
 smallSquare :: Color -> IntPoint -> Sprite
-smallSquare c p = Sprite {shape = Square 1, position = p, clr = c}
+smallSquare c p = Sprite {shape = Square 1, position = p, clr = SRColor c}
 
 smallTriangle :: Color -> IntPoint -> Sprite
 smallTriangle c p =
-  Sprite {shape = Triangle (0, 1) (1, 0), position = p, clr = c}
+  Sprite {shape = Triangle (0, 1) (1, 0), position = p, clr = SRColor c}
 
 largeTriangle :: Color -> IntPoint -> Sprite
 largeTriangle c p =
-  move D Sprite {shape = Triangle (1, 1) (1, -1), position = p, clr = c}
+  move D Sprite {shape = Triangle (1, 1) (1, -1), position = p, clr = SRColor c}
 
 parallelogram :: Color -> IntPoint -> (IntPoint, IntPoint) -> Sprite
-parallelogram c pos (p1, p2) = Sprite (Parallel p1 p2) pos c
+parallelogram c pos (p1, p2) = Sprite (Parallel p1 p2) pos (SRColor c)
 
 -- My coordinates are in Ints,
 -- (0,0) starts at top left corner instead of middle, y increasing goes down
@@ -55,7 +56,7 @@ drawShape (Parallel c d) =
     $ translateCoordinates <$> [(0, 0), c, c `add` d, d]
 
 draw :: Sprite -> Picture
-draw (Sprite s (x, y) c) =
+draw (Sprite s (x, y) (SRColor c)) =
   Color c
     $ Translate (fromIntegral (x * unitSize)) (-fromIntegral (y * unitSize))
     $ drawShape s
