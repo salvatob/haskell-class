@@ -11,3 +11,6 @@ unitHeight = 3 :: Int
 windowWidth = unitWidth * unitSize :: Int
 
 windowHeight = unitHeight * unitSize :: Int
+
+
+type IntPoint = (Int, Int)

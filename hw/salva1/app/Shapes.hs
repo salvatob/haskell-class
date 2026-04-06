@@ -4,7 +4,6 @@ import Constants
 import Graphics.Gloss
 import Helpers
 
-type IntPoint = (Int, Int)
 
 data Shape
   = Square Int -- only size is specified 

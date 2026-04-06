@@ -1,5 +1,7 @@
 module Helpers where
 
+import Constants
+
 -- applies f  n-times
 repeatF :: (b -> b) -> Int -> b -> b
 repeatF f n = foldr (.) id (replicate n f)
