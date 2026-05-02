@@ -16,7 +16,9 @@ data Tok
   = TInt Int
   | TNewLine
   | TBlanks Int
-  | TOp Char -- operators + - * / 
+  | TOp Char -- operators + - * / % < > 
+  | TLeftPar
+  | TRightPar
   deriving (Show, Eq, Ord)
 
 -- | We use this function to show the tokens in error messages from the parser,
@@ -56,11 +58,14 @@ type Tokenizer = Parsec Void String
 
 parseOp :: Tokenizer (T Tok)
 parseOp = do
-  op <- oneOf "+-*/"
+  op <- oneOf "+-*/%<>"
   return $ T [op] (TOp op)
 
 parseNl :: Tokenizer (T Tok)
 parseNl = T "\n" TNewLine <$ char '\n'
+
+parse1 :: Tok -> Char -> Tokenizer (T Tok)
+parse1 t c = T [c] t <$ char c
 
 -- | This parses out all tokens (you might want to extend the token count)
 tok :: Tokenizer (T Tok)
@@ -68,7 +73,9 @@ tok =
   choice
     [ try ((T <$> id <*> TInt . read) <$> some digitChar)
     , (T <$> id <*> TBlanks . length) <$> some (char ' ')
-    , T "\n" TNewLine <$ char '\n'
+    , parse1 TNewLine '\n'
+    , parse1 TLeftPar '('
+    , parse1 TRightPar ')'
     , parseOp
     ]
 
@@ -122,8 +129,9 @@ parsePairs = runParser (blanks *> many pairLine <* eof)
 main = do
   let msg x = putStrLn $ "\n*** " ++ x ++ ": ***\n"
   msg "tokenizer output"
-  let Right tokens = tokenize "input.txt" "0 1 \n   4 5\n"
+  let Right tokens = tokenize "input.txt" "0 1 (<) \n"
   print tokens
+  return ()
   msg "tokenizer error example"
   let Left err = tokenize "input.txt" "0 1 \n   four 5\n"
   putStrLn $ errorBundlePretty err
