@@ -1,8 +1,5 @@
-#!cabal
-{- cabal:
-build-depends: base, megaparsec
--}
 {-# LANGUAGE TypeFamilies #-}
+module Parser where
 
 import Control.Monad (void)
 import Data.Bool (bool)
@@ -11,6 +8,7 @@ import Data.List.NonEmpty (NonEmpty(..))
 import Data.Void (Void)
 import Text.Megaparsec
 import Text.Megaparsec.Char
+-- import Text.ParserCombinators.ReadP (choice)
 
 {- | A data type for tokens. `TBlanks` stores the size of the blank space,
  - because we need it to measure the indentation width. -}
@@ -18,6 +16,7 @@ data Tok
   = TInt Int
   | TNewLine
   | TBlanks Int
+  | TOp Char -- operators + - * / 
   deriving (Show, Eq, Ord)
 
 -- | We use this function to show the tokens in error messages from the parser,
@@ -25,6 +24,7 @@ data Tok
 -- "unexpected line ending" :D ), modify this function first.
 showTok :: Tok -> String
 showTok = show
+
 
 {- | Because of the need to have sensible source-related error messages from
  - the SECOND level of parsing, we will need to reconstruct the actual original
@@ -54,6 +54,14 @@ isNewLine _ = False
 -- | The tokenizer eats normal Strings
 type Tokenizer = Parsec Void String
 
+parseOp :: Tokenizer (T Tok)
+parseOp = do
+  op <- oneOf "+-*/"
+  return $ T [op] (TOp op)
+
+parseNl :: Tokenizer (T Tok)
+parseNl = T "\n" TNewLine <$ char '\n'
+
 -- | This parses out all tokens (you might want to extend the token count)
 tok :: Tokenizer (T Tok)
 tok =
@@ -61,6 +69,7 @@ tok =
     [ try ((T <$> id <*> TInt . read) <$> some digitChar)
     , (T <$> id <*> TBlanks . length) <$> some (char ' ')
     , T "\n" TNewLine <$ char '\n'
+    , parseOp
     ]
 
 toks :: Tokenizer [T Tok]
