@@ -9,13 +9,24 @@ import Data.Void (Void)
 import Text.Megaparsec
 import Text.Megaparsec.Char
 
+data OpTok
+  = TPlusOp
+  | TMinusOp
+  | TStarOp
+  | TSlashOp
+  | TModOp
+  | TLessOp
+  | TGreaterOp
+  deriving (Show, Eq, Ord)
+
 {- | A data type for tokens. `TBlanks` stores the size of the blank space,
  - because we need it to measure the indentation width. -}
 data Tok
   = TInt Int
   | TNewLine
   | TBlanks Int
-  | TOp Char -- operators + - * / % < > 
+  -- | TOp Char -- operators + - * / % < > 
+  | TOp OpTok  
   | TLeftPar
   | TRightPar
   | TColon
@@ -44,13 +55,20 @@ isNewLine _ = False
 -- | The tokenizer eats normal Strings
 type Tokenizer = Parsec Void String
 
-tOp :: Tokenizer (T Tok)
-tOp = do
-  op <- oneOf "+-*/%<>"
-  return $ T [op] (TOp op)
 
 tSimple :: Tok -> Char -> Tokenizer (T Tok)
 tSimple t c = T [c] t <$ char c
+
+tOp :: Tokenizer (T Tok)
+tOp = choice 
+  [ tSimple (TOp TPlusOp)     '+' 
+  , tSimple (TOp TMinusOp)    '-'  
+  , tSimple (TOp TStarOp)     '*' 
+  , tSimple (TOp TSlashOp)    '/'  
+  , tSimple (TOp TModOp)      '%' 
+  , tSimple (TOp TLessOp)     '<'  
+  , tSimple (TOp TGreaterOp)  '>'  
+  ]
 
 tCharLiteral :: Tokenizer (T Tok)
 tCharLiteral = do
@@ -72,7 +90,7 @@ tIdentifier = do
 tSymbol :: Tokenizer (T Tok)
 tSymbol = do 
   word <- some letterChar
-  return $  T word (TIdentifier word)
+  return $ T word (TIdentifier word)
 
 
 -- | This parses out all tokens (you might want to extend the token count)
