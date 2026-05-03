@@ -62,12 +62,17 @@ tCharLiteral = do
 tIdentifier :: Tokenizer (T Tok)
 tIdentifier = do
   word <- some letterChar
-  return $ case word of
-    "if" ->  T word TIf
-    "else" ->  T word TElse
-    "def" ->  T word TFuncDef
-    "pass" ->  T word TPass
-    _ ->  T word (TIdentifier word)
+  case word of
+    "if"    -> pure $ T word TIf
+    "else"  -> pure $ T word TElse
+    "def"   -> pure $ T word TFuncDef
+    "pass"  -> pure $ T word TPass
+    _ ->  fail "token has not matched any known keyword"
+
+tSymbol :: Tokenizer (T Tok)
+tSymbol = do 
+  word <- some letterChar
+  return $  T word (TIdentifier word)
 
 
 -- | This parses out all tokens (you might want to extend the token count)
@@ -82,7 +87,8 @@ tok =
     , tSimple TColon ':'
     , tOp
     , try tCharLiteral
-    , tIdentifier
+    , try tIdentifier
+    , try tSymbol
     ]
 
 toks :: Tokenizer [T Tok]
