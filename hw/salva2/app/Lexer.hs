@@ -1,10 +1,6 @@
 {-# LANGUAGE TypeFamilies #-}
 module Lexer where
 
-import Control.Monad (void)
-import Data.Bool (bool)
-import Data.List (intercalate)
-import Data.List.NonEmpty (NonEmpty(..))
 import Data.Void (Void)
 import Text.Megaparsec
 import Text.Megaparsec.Char

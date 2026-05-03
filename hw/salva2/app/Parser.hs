@@ -9,7 +9,6 @@ import Data.List.NonEmpty (NonEmpty(..))
 import Data.Void (Void)
 import Lexer
 import Text.Megaparsec
-import Text.Megaparsec.Char
 
 data Expression
   = Variable String
