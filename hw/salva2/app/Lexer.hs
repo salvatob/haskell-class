@@ -8,6 +8,8 @@ import Data.List.NonEmpty (NonEmpty(..))
 import Text.Megaparsec
 import Text.Megaparsec.Char
 
+
+
 data OpTok
   = TPlusOp
   | TMinusOp

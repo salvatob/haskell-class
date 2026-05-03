@@ -10,7 +10,7 @@ main :: IO ()
 main = do
   let inputFile = "input.txt"
   input <- readFile inputFile
-  
+
   print "tokens incoming:"
   let tokens = tokenize inputFile input
   case tokens of
@@ -20,8 +20,11 @@ main = do
   print "AST incoming:"
   let ast =
         case tokens of
-          Right t -> parseExpr inputFile t
-          -- Left err -> 
+          Right t -> parseIf inputFile t
+          -- Left err -> Left err
 
-  print ast
+  case ast of
+    Right tree -> print tree
+    Left e -> putStrLn $ errorBundlePretty e
+  
   return ()

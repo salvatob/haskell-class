@@ -7,24 +7,33 @@ import Data.Void (Void)
 import Lexer
 import Text.Megaparsec
 
-data Expression
-  = Variable String
-  | Literal Int
-  | Plus Expression Expression
-  | Minus Expression Expression
-  | Times Expression Expression
-  | Div Expression Expression
-  | Mod Expression Expression
-  | Less Expression Expression
-  | Greater Expression Expression
+
+newtype Identifier = Identifier String
+  deriving (Show, Eq, Ord)
+
+data Expr
+  = EVar Identifier
+  | ELit Int
+  | EBinOp BinOp Expr Expr
+  | EUnaryOp UnaryOp Expr
   deriving (Show)
 
-data Node
-  = Block [Node]
-  | Symbol String
-  | Assignment 
-  | If Expression Node
-  | IfElse Expression Node Node
+data BinOp
+  = Add | Sub | Mul | Div | Mod
+  | Less | Greater
+  deriving (Show)
+
+data UnaryOp
+  = Neg
+  deriving (Show)
+
+data Stmt
+  = SBlock [Stmt]
+  | SAssign Identifier Expr
+  | SIf Expr Stmt
+  | SIfElse Expr Stmt Stmt
+  | SExpr Expr
+  | SPass
   deriving (Show)
 
 -- | The parser takes the tagged stream of tokens as an input
@@ -60,25 +69,25 @@ pInt = pLexeme $ do
     isInt (TInt _) = True
     isInt _ = False
 
-pAtom :: Parser Expression
+pAtom :: Parser Expr
 pAtom = pLexeme $
-  (Literal <$> pInt)
+  (ELit <$> pInt)
     <|> (do
            TIdentifier var <- satisfy isIdentifier
-           return $ Variable var)
+           return $ EVar $ Identifier var)
   where
     isIdentifier (TIdentifier _) = True
     isIdentifier _ = False
 
 
-pOp :: Parser (Expression -> Expression -> Expression)
+pOp :: Parser BinOp
 pOp = do
   TOp op <- satisfy isOp
   pure
     $ case op of
-        TPlusOp -> Plus
-        TMinusOp -> Minus
-        TStarOp -> Times
+        TPlusOp -> Add
+        TMinusOp -> Sub
+        TStarOp -> Mul
         TSlashOp -> Div
         TModOp -> Mod
         TLessOp -> Less
@@ -87,28 +96,33 @@ pOp = do
     isOp (TOp _) = True
     isOp _ = False
 
-pExpr :: Parser Expression
+
+pExpr :: Parser Expr
 pExpr = do
   first <- pAtom
   rest <- many ((,) <$> pOp <*> pAtom)
-  pure $ foldl (\acc (op, val) -> op acc val) first rest
+  return $ foldl applyOp first rest
+  where
+    applyOp acc (op, val) = EBinOp op acc val
 
-pBlock :: Parser Node
+
+pBlock :: Parser Stmt
 pBlock = do
   blanks
-  p <- satisfy isPass
-  return $ Symbol
+  satisfy isPass
+  return SPass
   where
     isPass TPass = True
     isPass _ = False
 
-pIf :: Parser Node
+
+pIf :: Parser Stmt
 pIf = do
-  _ <- satisfy isIf
+  satisfy isIf
+  blanks
   expr <- pExpr
-  _ <- satisfy isColon
-  body <- pBlock
-  return $ If expr body
+  satisfy isColon
+  SIf expr <$> pBlock
   where
     isIf TIf = True
     isIf _ = False
@@ -118,6 +132,7 @@ pIf = do
 
 
 parseExpr = runParser (pExpr <* eof)
+parseIf = runParser (pIf <* eof)
 
 -- | eat 2 integers and a newline
 pairLine = (,) <$> pLexeme pInt <*> pLexeme pInt <* pLexeme (single TNewLine)
