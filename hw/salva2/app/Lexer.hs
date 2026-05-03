@@ -44,26 +44,23 @@ isNewLine _ = False
 -- | The tokenizer eats normal Strings
 type Tokenizer = Parsec Void String
 
-parseOp :: Tokenizer (T Tok)
-parseOp = do
+tOp :: Tokenizer (T Tok)
+tOp = do
   op <- oneOf "+-*/%<>"
   return $ T [op] (TOp op)
 
-parseNl :: Tokenizer (T Tok)
-parseNl = T "\n" TNewLine <$ char '\n'
+tSimple :: Tok -> Char -> Tokenizer (T Tok)
+tSimple t c = T [c] t <$ char c
 
-parse1 :: Tok -> Char -> Tokenizer (T Tok)
-parse1 t c = T [c] t <$ char c
-
-parseChar :: Tokenizer (T Tok)
-parseChar = do
+tCharLiteral :: Tokenizer (T Tok)
+tCharLiteral = do
   char '\''
   c <- latin1Char
   char '\''
   return $ T [c] (TChar c)
 
-parseIdentifier :: Tokenizer (T Tok)
-parseIdentifier = do
+tIdentifier :: Tokenizer (T Tok)
+tIdentifier = do
   word <- some letterChar
   return $ case word of
     "if" ->  T word TIf
@@ -79,13 +76,13 @@ tok =
   choice
     [ try ((T <$> id <*> TInt . read) <$> some digitChar)
     , (T <$> id <*> TBlanks . length) <$> some (char ' ')
-    , parse1 TNewLine '\n'
-    , parse1 TLeftPar '('
-    , parse1 TRightPar ')'
-    , parse1 TColon ':'
-    , parseOp
-    , try parseChar
-    , parseIdentifier
+    , tSimple TNewLine '\n'
+    , tSimple TLeftPar '('
+    , tSimple TRightPar ')'
+    , tSimple TColon ':'
+    , tOp
+    , try tCharLiteral
+    , tIdentifier
     ]
 
 toks :: Tokenizer [T Tok]
