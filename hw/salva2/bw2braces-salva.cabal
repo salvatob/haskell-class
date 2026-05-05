@@ -65,12 +65,14 @@ executable bw2braces-salva
     other-modules:  Parser
                     Lexer
                     Exterminator
+                    StackState
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
 
     -- Other library packages from which modules are imported.
     build-depends:      base,
+                        mtl >=2.2.2 && <2.4,
                         megaparsec
 
     -- Directories containing source files.

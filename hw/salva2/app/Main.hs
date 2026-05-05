@@ -3,11 +3,14 @@ module Main where
 import Lexer
 import Parser
 import Text.Megaparsec
+import StackState
 
+-- main = testStack [69]
 
 -- | a bit of demonstration
 main :: IO ()
 main = do
+  
   let inputFile = "input.txt"
   input <- readFile inputFile
 
