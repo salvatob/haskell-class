@@ -50,6 +50,7 @@ data T a = T
   , unT :: !a -- ^ discards the wrap and returns the data
   } deriving (Show)
 
+isNewLine :: T Tok -> Bool
 isNewLine (T _ TNewLine) = True
 isNewLine _ = False
 
@@ -88,6 +89,7 @@ tIdentifier = do
     "pass"  -> pure $ T word TPass
     _ ->  fail "token has not matched any known keyword"
 
+
 tSymbol :: Tokenizer (T Tok)
 tSymbol = do 
   word <- some letterChar
@@ -120,6 +122,7 @@ newtype TokStream = TokStream
   } deriving (Show)
 
 -- | This runs the tokenizer
+tokenize :: String -> String -> Either (ParseErrorBundle String Void) TokStream
 tokenize = runParser (TokStream <$> toks <* eof)
 
 
