@@ -5,8 +5,10 @@ import Data.Void (Void)
 import Data.Bool (bool)
 import Data.List (intercalate)
 import Data.List.NonEmpty (NonEmpty(..))
-import Text.Megaparsec
+import Text.Megaparsec hiding (State)
 import Text.Megaparsec.Char
+import StackState
+import Control.Monad.State
 
 
 
@@ -25,7 +27,7 @@ data OpTok
 data Tok
   = TInt Int
   | TNewLine
-  | TBlanks Int
+  -- | TBlanks Int
   -- | TOp Char -- operators + - * / % < > 
   | TOp OpTok  
   | TLeftPar
@@ -55,7 +57,8 @@ isNewLine (T _ TNewLine) = True
 isNewLine _ = False
 
 -- | The tokenizer eats normal Strings
-type Tokenizer = Parsec Void String
+-- type Tokenizer = Parsec Void String
+type Tokenizer = ParsecT Void String (State Stack)
 
 
 tSimple :: Tok -> Char -> Tokenizer (T Tok)
@@ -95,14 +98,16 @@ tSymbol = do
   word <- some letterChar
   return $ T word (TIdentifier word)
 
+tInt :: Tokenizer (T Tok)
+tInt = try ((T <$> id <*> TInt . read) <$> some digitChar)
 
 -- | This parses out all tokens (you might want to extend the token count)
 tok :: Tokenizer (T Tok)
 tok =
   choice
-    [ try ((T <$> id <*> TInt . read) <$> some digitChar)
-    , (T <$> id <*> TBlanks . length) <$> some (char ' ')
-    , tSimple TNewLine '\n'
+    [
+    -- , (T <$> id <*> TBlanks . length) <$> some (char ' ')
+    tSimple TNewLine '\n'
     , tSimple TLeftPar '('
     , tSimple TRightPar ')'
     , tSimple TColon ':'
@@ -110,6 +115,7 @@ tok =
     , try tCharLiteral
     , try tIdentifier
     , try tSymbol
+    , tInt
     ]
 
 toks :: Tokenizer [T Tok]
@@ -121,9 +127,13 @@ newtype TokStream = TokStream
   { unTokStream :: [T Tok]
   } deriving (Show)
 
--- | This runs the tokenizer
+  -- run the stateful parser with initial stack [0]
 tokenize :: String -> String -> Either (ParseErrorBundle String Void) TokStream
-tokenize = runParser (TokStream <$> toks <* eof)
+tokenize sourceName input =
+  evalState (runParserT (TokStream <$> toks <* eof) sourceName input) [0]
+
+-- tokenize = runParser (TokStream <$> toks <* eof)
+
 
 
 -- | This is a megaparsec Stream instance for our `TokStream`, which works as
