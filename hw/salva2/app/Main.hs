@@ -10,14 +10,14 @@ import StackState
 -- | a bit of demonstration
 main :: IO ()
 main = do
-  
+
   let inputFile = "input.txt"
   input <- readFile inputFile
 
   print "tokens incoming:"
   let tokens = tokenize inputFile input
   case tokens of
-    Right t -> print t
+    Right t -> print $ unT <$> unTokStream t
     Left err -> putStrLn $ errorBundlePretty err
 
   print "AST incoming:"
@@ -29,5 +29,5 @@ main = do
   case ast of
     Right tree -> print tree
     Left e -> putStrLn $ errorBundlePretty e
-  
+
   return ()
