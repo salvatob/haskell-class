@@ -63,6 +63,12 @@ isNewLine _ = False
 type Tokenizer = ParsecT Void String (State Stack)
 
 
+mySpace :: Tokenizer ()
+mySpace = void $ many (satisfy (`elem` [' ', '\t']))
+
+lexeme :: Tokenizer a -> Tokenizer a
+lexeme p = p <* mySpace -- Megaparsec.space consumes newlines, which we cannot do here
+
 
 tSimple :: Tok -> Char -> Tokenizer (T Tok)
 tSimple t c = T [c] t <$ char c
@@ -111,7 +117,7 @@ tNl = tSimple TNewLine '\n'
 -- | This parses out all tokens (you might want to extend the token count)
 tok :: Tokenizer (T Tok)
 tok =
-  choice
+  lexeme $ choice
     [
     -- , (T <$> id <*> TBlanks . length) <$> some (char ' ')
       tSimple TLeftPar '('
