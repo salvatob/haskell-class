@@ -62,14 +62,14 @@ tSimple :: Tok -> Char -> Tokenizer (T Tok)
 tSimple t c = T [c] t <$ char c
 
 tOp :: Tokenizer (T Tok)
-tOp = choice 
-  [ tSimple (TOp TPlusOp)     '+' 
-  , tSimple (TOp TMinusOp)    '-'  
-  , tSimple (TOp TStarOp)     '*' 
-  , tSimple (TOp TSlashOp)    '/'  
-  , tSimple (TOp TModOp)      '%' 
-  , tSimple (TOp TLessOp)     '<'  
-  , tSimple (TOp TGreaterOp)  '>'  
+tOp = choice
+  [ tSimple (TOp TPlusOp)     '+'
+  , tSimple (TOp TMinusOp)    '-'
+  , tSimple (TOp TStarOp)     '*'
+  , tSimple (TOp TSlashOp)    '/'
+  , tSimple (TOp TModOp)      '%'
+  , tSimple (TOp TLessOp)     '<'
+  , tSimple (TOp TGreaterOp)  '>'
   ]
 
 tCharLiteral :: Tokenizer (T Tok)
@@ -87,11 +87,11 @@ tIdentifier = do
     "else"  -> pure $ T word TElse
     "def"   -> pure $ T word TFuncDef
     "pass"  -> pure $ T word TPass
-    _ ->  fail "token has not matched any known keyword"
+    _ ->  fail $ "operator " ++ show word ++ " has not matched any known keyword"
 
 
 tSymbol :: Tokenizer (T Tok)
-tSymbol = do 
+tSymbol = do
   word <- some letterChar
   return $ T word (TIdentifier word)
 
