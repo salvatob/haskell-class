@@ -29,7 +29,7 @@ data Tok
   | TNewLine
   -- | TBlanks Int
   -- | TOp Char -- operators + - * / % < > 
-  | TOp OpTok  
+  | TOp OpTok
   | TLeftPar
   | TRightPar
   | TColon
@@ -63,6 +63,7 @@ isNewLine _ = False
 type Tokenizer = ParsecT Void String (State Stack)
 
 
+
 tSimple :: Tok -> Char -> Tokenizer (T Tok)
 tSimple t c = T [c] t <$ char c
 
@@ -84,6 +85,7 @@ tCharLiteral = do
   char '\''
   return $ T [c] (TChar c)
 
+-- TODO could be refactored into with the 'string¨' function
 tIdentifier :: Tokenizer (T Tok)
 tIdentifier = do
   word <- some letterChar
@@ -103,14 +105,16 @@ tSymbol = do
 tInt :: Tokenizer (T Tok)
 tInt = try ((T <$> id <*> TInt . read) <$> some digitChar)
 
+tNl :: Tokenizer (T Tok)
+tNl = tSimple TNewLine '\n'
+
 -- | This parses out all tokens (you might want to extend the token count)
 tok :: Tokenizer (T Tok)
 tok =
   choice
     [
     -- , (T <$> id <*> TBlanks . length) <$> some (char ' ')
-    tSimple TNewLine '\n'
-    , tSimple TLeftPar '('
+      tSimple TLeftPar '('
     , tSimple TRightPar ')'
     , tSimple TColon ':'
     , tOp
@@ -119,6 +123,56 @@ tok =
     , try tSymbol
     , tInt
     ]
+
+makeNl :: T Tok
+makeNl = T "\n" TNewLine
+
+makeIndent :: T Tok
+makeIndent = T "INDENT" TIndent
+
+makeDedent :: T Tok
+makeDedent = T "DEDENT" TDedent
+
+
+-- returns a whole line (list of tokens without the newline)
+tLine :: Tokenizer [T Tok]
+tLine = do
+  line <- endBy (many tok) newline
+  return $ concat line
+
+-- consumes blank space before first non-whitespace character, returns the width
+-- should be called right after newline token
+countBlanks :: Tokenizer Int
+countBlanks = do
+  spaces <- many (char ' ') -- TODO should handle whitespace better
+  let width = length spaces
+  return width
+
+handleLine :: Tokenizer [T Tok]
+handleLine = do
+  indent <- countBlanks
+  rest <- tLine
+
+  case rest of
+    [] -> return [makeNl] -- blank line
+    line -> do
+      stack_indent <- lift peek
+      case stack_indent of
+        Nothing -> error "deverror - The indent stack is empty."
+        Just last_indent -> do 
+          let diff = compare indent last_indent
+          case diff of
+            EQ -> return $ line ++ [makeNl]
+            GT -> do
+              lift $ push indent
+              return $ makeIndent: line ++ [makeNl]
+            LT -> do -- find, how many blocks we dedent by
+              _ <- lift pop
+              return $ makeDedent : line ++ [makeNl]
+           
+  
+
+  
 
 toks :: Tokenizer [T Tok]
 toks = many tok
@@ -131,8 +185,8 @@ newtype TokStream = TokStream
 
   -- run the stateful parser with initial stack [0]
 tokenize :: String -> String -> Either (ParseErrorBundle String Void) TokStream
-tokenize sourceName input =
-  evalState (runParserT (TokStream <$> toks <* eof) sourceName input) [0]
+tokenize fileName input =
+  evalState (runParserT (TokStream <$> toks <* eof) fileName input) [0]
 
 -- tokenize = runParser (TokStream <$> toks <* eof)
 
