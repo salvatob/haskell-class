@@ -59,7 +59,6 @@ isNewLine (T _ TNewLine) = True
 isNewLine _ = False
 
 -- | The tokenizer eats normal Strings
--- type Tokenizer = Parsec Void String
 type Tokenizer = ParsecT Void String (State Stack)
 
 
@@ -146,17 +145,24 @@ tLine = do
   line <- manyTill (many tok) (void newline <|> eof)
   return $ concat line
 
--- consumes blank space before first non-whitespace character, returns the width
--- should be called right after newline token
-countBlanks :: Tokenizer Int
-countBlanks = do
+-- -- |Parse tokens until newline or EOF, returning the list of tokens and maybe the newline token.
+-- tLine :: Tokenizer ([T Tok], Maybe (T Tok))
+-- tLine = do
+--   toks <- manyTill tok (void (lookAhead newline) <|> eof)
+--   nl   <- optional newline
+--   return (toks, nl)
+
+-- |Consumes blank space before first non-whitespace character, returns the width.
+-- |Should be called right after newline token
+consumeBlanks :: Tokenizer Int
+consumeBlanks = do
   spaces <- many (char ' ') -- TODO should handle whitespace better
   let width = length spaces
   return width
 
 handleLine :: Tokenizer [T Tok]
 handleLine = do
-  indent <- countBlanks
+  indent <- consumeBlanks
   rest <- tLine
 
   case rest of
@@ -165,23 +171,49 @@ handleLine = do
       stack_indent <- lift peek
       case stack_indent of
         Nothing -> error "deverror - The indent stack is empty."
-        Just last_indent -> do 
+        Just last_indent -> do
           let diff = compare indent last_indent
           case diff of
             EQ -> return $ line ++ [makeNl]
+
             GT -> do
               lift $ push indent
               return $ makeIndent: line ++ [makeNl]
-            LT -> do -- find, how many blocks we dedent by
-              _ <- lift pop
-              return $ makeDedent : line ++ [makeNl]
-           
-  
 
-  
+            LT -> do -- find, how many blocks we dedent by
+              levels <- lift (popToWidth indent)
+              case levels of
+                Nothing -> fail "invalid dedentation..."
+                Just l -> do
+                  let ds = replicate l makeDedent
+                  return $ ds ++ line ++ [makeNl]
+
+
+flushStack :: Tokenizer [T Tok]
+flushStack = do
+  levels <- lift $ popToWidth 0 
+  case levels of
+    Nothing -> error "deverror - The indent stack was notinitiated with value 0."
+    Just w -> return $ replicate w makeDedent
+
+
+-- toks :: Tokenizer [T Tok]
+-- toks = many tok
+
 
 toks :: Tokenizer [T Tok]
-toks = many tok
+toks = go []
+ where
+   go acc = do
+     -- Check if we’re already at EOF
+     done <- atEnd
+     if done
+       then do
+         dedents <- flushStack
+         return (acc ++ dedents)
+       else do
+         lineToks <- handleLine
+         go (acc ++ lineToks)
 
 -- | A nice wrapper for the token stream (we'll need to make instances on this,
 -- so we want to have a type tag, not just a list alias).
