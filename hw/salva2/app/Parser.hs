@@ -41,14 +41,16 @@ type Parser = Parsec Void TokStream
 
 -- | parse any amount of blanks
 blanks :: Parser ()
-blanks = void $ many (satisfy isBlank)
-  where
-    isBlank (TBlanks _) = True
-    isBlank _ = False
+blanks = void $ count 0 anySingle
+-- blanks = void $ many (satisfy isBlank)
+--   where
+--     isBlank (TBlanks _) = True
+--     isBlank _ = False
 
 -- | eat blanks after a given parse
 pLexeme :: Parser a -> Parser a
-pLexeme = (<* blanks)
+-- pLexeme = (<* blanks)
+pLexeme = id
 
 match :: (Tok -> Maybe a) -> Parser a
 match f = do
@@ -108,7 +110,7 @@ pExpr = do
 
 pBlock :: Parser Stmt
 pBlock = do
-  blanks
+  -- blanks
   satisfy isPass
   return SPass
   where
@@ -119,7 +121,7 @@ pBlock = do
 pIf :: Parser Stmt
 pIf = do
   satisfy isIf
-  blanks
+  -- blanks
   expr <- pExpr
   satisfy isColon
   SIf expr <$> pBlock
