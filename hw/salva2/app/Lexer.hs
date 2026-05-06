@@ -140,10 +140,10 @@ makeDedent :: T Tok
 makeDedent = T "DEDENT" TDedent
 
 
--- returns a whole line (list of tokens without the newline)
+-- |Returns a whole line (list of tokens without the newline)
 tLine :: Tokenizer [T Tok]
 tLine = do
-  line <- endBy (many tok) newline
+  line <- manyTill (many tok) (void newline <|> eof)
   return $ concat line
 
 -- consumes blank space before first non-whitespace character, returns the width
