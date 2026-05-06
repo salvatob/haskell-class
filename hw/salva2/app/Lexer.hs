@@ -39,6 +39,8 @@ data Tok
   | TElse
   | TFuncDef
   | TPass
+  | TIndent
+  | TDedent
   deriving (Show, Eq, Ord)
 
 -- | We use this function to show the tokens in error messages from the parser,
