@@ -35,6 +35,7 @@ data Stmt
   | SIf Expr Stmt
   | SIfElse Expr Stmt Stmt
   | SExpr Expr
+  | SFuncDef Identifier [Identifier] Stmt
   | SPass
   deriving (Show)
 
@@ -57,12 +58,21 @@ pFuncCall :: Parser Expr
 pFuncCall = do
   name <- pIdentifier
   single TLeftPar
-
+  first <- try pExpr
+  rest <- many (single TComma *> pExpr)
   single TRightPar
+  return $ EFuncCall name (first:rest)
+
+-- pFuncDef :: Parser Stmt
+-- pFuncDef = do
+
+
+
+
 
 -- | parse a single integer
 pInt :: Parser Int
-pInt = pLexeme $ do
+pInt = do
   {- the line below carries an additional label for error messages (this allows
    - the parser to print stuff like "expected an integer") -}
   TInt i <- satisfy isInt <?> "an integer"
@@ -72,14 +82,10 @@ pInt = pLexeme $ do
     isInt _ = False
 
 pAtom :: Parser Expr
-pAtom = pLexeme $
-  (ELit <$> pInt)
-    <|> (do
-           TIdentifier var <- satisfy isIdentifier
-           return $ EVar $ Identifier var)
-  where
-    isIdentifier (TIdentifier _) = True
-    isIdentifier _ = False
+pAtom =
+  (ELit <$> pInt)                 -- number literal
+    <|> (do EVar <$> pIdentifier) -- or a variable
+    <|> try pFuncCall             -- or a result of a function call
 
 
 pOp :: Parser BinOp
@@ -109,23 +115,34 @@ pExpr = do
   where
     applyOp acc (op, val) = EBinOp op acc val
 
-
-pBlock :: Parser Stmt
-pBlock = do
-  -- blanks
-  satisfy isPass
-  return SPass
-  where
-    isPass TPass = True
-    isPass _ = False
-
+pTopExpr :: Parser Stmt
+pTopExpr = do
+  e <- pExpr
+  return $ SExpr e
 
 pIf :: Parser Stmt
 pIf = do
   single TIf
   expr <- pExpr
   single TColon
-  SIf expr <$> pBlock
+  single TIndent 
+  block <-  pBlock
+  single TDedent
+  
+  return $ SIf expr block 
+
+
+pIfElse :: Parser Stmt
+pIfElse = do
+  single TIf
+  expr <- pExpr
+  single TColon
+  block1 <- pBlock
+  single TElse
+  single TColon
+  block2 <- pBlock
+  return $ SIfElse expr block1 block2
+
 
 pAssignment :: Parser Stmt
 pAssignment = do
@@ -134,14 +151,23 @@ pAssignment = do
   expr <- pExpr
   return $ SAssign ident expr
 
-parseTokens = cleanupNL $ choice 
-  [ pAssignment
-  , pIf
-  , pBlock
+-- intentionally doesn't parse a block
+parseTokens = cleanupNL $ choice
+  [ fail "unreachable"
+  , try pAssignment <?> "tried parsing assignment"
+  , try pTopExpr <?> "tried parsing top level expression"
+  , try pIf <?> "tried parsing if statement"
+  , try pIfElse <?> "tried parsing if-else statement"
   ]
 
-parseExpr = runParser (pExpr <* eof)
-parseIf = runParser (pIf <* eof)
 
-runP = runParser (parseTokens <* eof)
+pBlock :: Parser Stmt
+pBlock = do
+  statements <- many parseTokens
+  return $ SBlock statements
+
+-- parseExpr = runParser (pExpr <* eof)
+-- parseIf = runParser (pIf <* eof)
+
+runP = runParser (pBlock <* eof)
 
