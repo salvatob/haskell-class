@@ -110,8 +110,10 @@ pOp = do
     isOp (TOp _) = True
     isOp _ = False
 
-cleanupNL :: Parser Stmt -> Parser Stmt
-cleanupNL p = p <* many (single TNewLine)
+-- cleanupNL :: Parser Stmt -> Parser Stmt
+cln :: Parser ()
+-- cleanupNL :: 
+cln = void $ some (single TNewLine)
 
 pExpr :: Parser Expr
 pExpr = do
@@ -165,25 +167,29 @@ pPass = do SPass <$ single TPass
 -- intentionally avoid parsing a block
 parseStmt :: Parser Stmt
 parseStmt = choice
-  [ pAssignment
-  , pTopExpr <?> "top level expression (func call)"
-  -- , try pIfElse <?> "an IF-ELSE statement"
+  [  pPass <* cln
+  , pTopExpr <* cln <?> "top level expression (func call)"
+  , pAssignment <* cln
   , pIf <?> "an if statement"
-  , pPass
+  -- , try pIfElse <?> "an IF-ELSE statement"
   ]
 
 
 pBlock :: Parser Stmt
 pBlock = do
   pSimple TIndent
-  statements <- many (parseStmt <* pSimple TNewLine) <?> "empty lines not possible in here"
+  -- statements <- many (parseStmt <* pSimple TNewLine) <?> "empty lines not possible in here"
+  statements <- sepBy1 parseStmt (some (single TNewLine))   -- at least one newline between stmts
+  _     <- many (single TNewLine)
   pSimple TDedent
   return $ SBlock statements
 
 
 pProgram :: Parser Stmt
 pProgram = do
-  statements <- many (parseStmt <* some (pSimple TNewLine)) <?> "empty lines not possible in here"
+  statements <- many (parseStmt <* many (pSimple TNewLine)) <?> "empty lines not possible in here"
+  -- statements <- sepBy1 parseStmt (some (single TNewLine))   -- at least one newline between stmts
+  -- _     <- many (single TNewLine)
   -- statements <- many (parseStmt <* some $ pSimple TNewLine) <?> "empty lines not possible in here"
   -- statements <- many (cleanupNL parseStmt)
   return $ SBlock statements
