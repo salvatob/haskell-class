@@ -33,6 +33,7 @@ data Tok
   | TLeftPar
   | TRightPar
   | TColon
+  | TComma
   | TChar Char
   | TIdentifier String -- represents a variable or function name
   | TIf
@@ -123,6 +124,7 @@ tok =
       tSimple TLeftPar '('
     , tSimple TRightPar ')'
     , tSimple TColon ':'
+    , tSimple TComma ','
     , tSimple TAssign '='
     , tOp
     , try tCharLiteral
