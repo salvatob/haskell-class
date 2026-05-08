@@ -1,6 +1,6 @@
--- {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE LambdaCase #-}
-{-# OPTIONS_GHC -Wno-unused-do-bind #-}
+-- {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use <$>" #-}
 
 module Parser where
 
@@ -54,30 +54,34 @@ match f = do
 
 
 pIdentifier :: Parser Identifier
-pIdentifier = match (\case TIdentifier s -> Just (Identifier s); _ -> Nothing)
+pIdentifier = match (\case TIdentifier s -> Just (Identifier s); _ -> Nothing) <?> "identifier"
 
 pFuncCall :: Parser Expr
 pFuncCall = do
   name <- pIdentifier
-  single TLeftPar
+  pSimple TLeftPar
   first <- try pExpr
   rest <- many (single TComma *> pExpr)
-  single TRightPar
+  pSimple TRightPar
   return $ EFuncCall name (first:rest)
 
 -- pFuncDef :: Parser Stmt
 -- pFuncDef = do
 
 
+pSimple :: Tok -> Parser ()
+pSimple t = void $ single t
 
-
+-- TODO this may not correctly deal with errors
+pSeq :: [Tok] -> Parser ()
+pSeq = mapM_ single
 
 -- | parse a single integer
 pInt :: Parser Int
 pInt = do
   {- the line below carries an additional label for error messages (this allows
    - the parser to print stuff like "expected an integer") -}
-  TInt i <- satisfy isInt <?> "an integer"
+  TInt i <- satisfy isInt <?> "an integer literal"
   return i
   where
     isInt (TInt _) = True
@@ -124,31 +128,25 @@ pTopExpr = do
 
 pIf :: Parser Stmt
 pIf = do
-  single TIf <?> "here if 125"
-  cond <- pExpr
-  single TColon
-  single TNewLine
-  single TIndent 
-  block <-  pBlock
-  single TDedent
-  
-  return $ SIf cond block 
+  pSimple TIf
+  cond <- pExpr <?> "a condition expression"
+  pSimple TColon
+  pSimple TNewLine
+
+  block <- pBlock
+
+  return $ SIf cond block
   <?> "an if statement 133"
 
 pIfElse :: Parser Stmt
-pIfElse = do   
-  single TIf <?> "here if 125"
+pIfElse = do
+  pSimple TIf
   cond <- pExpr
-  single TColon
-  single TNewLine
-  single TIndent
+  pSeq [TColon, TNewLine]
   block1 <- pBlock
-  trace "got here1" single TNewLine
-  trace "got here2" single TDedent
-  single TElse
-  single TColon
-  single TIndent 
+  trace "got here1" pSimple TNewLine
 
+  pSeq [TElse, TColon]
   block2 <- pBlock
   single TDedent
 
@@ -158,7 +156,7 @@ pIfElse = do
 pAssignment :: Parser Stmt
 pAssignment = do
   ident <- pIdentifier
-  single TAssign
+  pSimple TAssign
   expr <- pExpr
   return $ SAssign ident expr
 
