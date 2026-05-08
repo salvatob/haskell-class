@@ -1,5 +1,6 @@
 -- {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE LambdaCase #-}
+{-# OPTIONS_GHC -Wno-unused-do-bind #-}
 
 module Parser where
 
@@ -109,7 +110,7 @@ cleanupNL p = p <* many (single TNewLine)
 
 pExpr :: Parser Expr
 pExpr = do
-  first <- pAtom
+  first <- pAtom <?> "an integer"
   rest <- many ((,) <$> pOp <*> pAtom)
   return $ foldl applyOp first rest
   where
@@ -122,25 +123,33 @@ pTopExpr = do
 
 pIf :: Parser Stmt
 pIf = do
-  single TIf
+  single TIf <?> "here if 125"
   expr <- pExpr
   single TColon
+  single TNewLine
   single TIndent 
   block <-  pBlock
   single TDedent
   
   return $ SIf expr block 
-
+  <?> "an if statement 133"
 
 pIfElse :: Parser Stmt
 pIfElse = do
   single TIf
   expr <- pExpr
   single TColon
-  block1 <- pBlock
+  single TNewLine
+  single TIndent
+  block1 <- cleanupNL pBlock
+  single TNewLine
+  single TDedent
   single TElse
   single TColon
+  single TNewLine
+  single TIndent
   block2 <- pBlock
+  single TDedent
   return $ SIfElse expr block1 block2
 
 
@@ -151,13 +160,18 @@ pAssignment = do
   expr <- pExpr
   return $ SAssign ident expr
 
--- intentionally doesn't parse a block
+pPass :: Parser Stmt
+pPass = do SPass <$ single TPass
+
+-- intentionally avoid parsing a block
+parseTokens :: Parser Stmt
 parseTokens = cleanupNL $ choice
   [ fail "unreachable"
-  , try pAssignment <?> "tried parsing assignment"
-  , try pTopExpr <?> "tried parsing top level expression"
-  , try pIf <?> "tried parsing if statement"
-  , try pIfElse <?> "tried parsing if-else statement"
+  , try pAssignment
+  , try pTopExpr
+  , try pIf <?> "here if 163"
+  , try pIfElse
+  , pPass 
   ]
 
 
@@ -166,8 +180,8 @@ pBlock = do
   statements <- many parseTokens
   return $ SBlock statements
 
--- parseExpr = runParser (pExpr <* eof)
--- parseIf = runParser (pIf <* eof)
 
+
+runP :: String -> TokStream -> Either (ParseErrorBundle TokStream Void) Stmt
 runP = runParser (pBlock <* eof)
 
