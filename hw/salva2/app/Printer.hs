@@ -4,7 +4,7 @@
 module Printer where
 
 
-import Prettyprinter          -- main library
+import Prettyprinter
 import Prettyprinter.Render.String (renderString)
 import Parser
 
@@ -18,6 +18,7 @@ prettyExpr = \case
     -- (simplified: always wrap if needed, but here we keep it minimal)
     prettyExpr l <+> prettyOp op <+> prettyExpr r
   EUnaryOp Neg e -> "-" <> prettyExpr e
+  EFuncCall (Identifier name) args -> pretty name <> tupled (prettyExpr <$> args)
 
 prettyOp :: BinOp -> Doc ()
 prettyOp = \case
@@ -60,16 +61,6 @@ prettyStmt n (SBlock stmts) =
 prettyAST :: Stmt -> Doc ()
 prettyAST = prettyStmt 0
 
--- wrapWith :: String -> String -> Doc ann -> Doc ann
--- wrapWith l r doc = text l <> doc <> (text r)
-
--- parentheses = wrapWith "(" ")"
-
--- parens :: Doc ann -> Doc ann
--- parens doc = char '(' <> doc <> char ')'
-
--- braces :: Doc ann -> Doc ann
--- braces doc = char '{' <> doc <> char '}'
 
 -- Render to a String with a default layout (80 columns)
 printAST :: Stmt -> String
