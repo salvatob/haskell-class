@@ -8,6 +8,7 @@ import Control.Monad (void)
 import Data.Void (Void)
 import Lexer
 import Text.Megaparsec hiding (match)
+import Debug.Trace (trace)
 
 
 newtype Identifier = Identifier String
@@ -124,33 +125,34 @@ pTopExpr = do
 pIf :: Parser Stmt
 pIf = do
   single TIf <?> "here if 125"
-  expr <- pExpr
+  cond <- pExpr
   single TColon
   single TNewLine
   single TIndent 
   block <-  pBlock
   single TDedent
   
-  return $ SIf expr block 
+  return $ SIf cond block 
   <?> "an if statement 133"
 
 pIfElse :: Parser Stmt
-pIfElse = do
-  single TIf
-  expr <- pExpr
+pIfElse = do   
+  single TIf <?> "here if 125"
+  cond <- pExpr
   single TColon
   single TNewLine
   single TIndent
-  block1 <- cleanupNL pBlock
-  single TNewLine
-  single TDedent
+  block1 <- pBlock
+  trace "got here1" single TNewLine
+  trace "got here2" single TDedent
   single TElse
   single TColon
-  single TNewLine
-  single TIndent
+  single TIndent 
+
   block2 <- pBlock
   single TDedent
-  return $ SIfElse expr block1 block2
+
+  return $ SIfElse cond block1 block2
 
 
 pAssignment :: Parser Stmt
@@ -164,20 +166,20 @@ pPass :: Parser Stmt
 pPass = do SPass <$ single TPass
 
 -- intentionally avoid parsing a block
-parseTokens :: Parser Stmt
-parseTokens = cleanupNL $ choice
+parseStmt :: Parser Stmt
+parseStmt = cleanupNL $ choice
   [ fail "unreachable"
   , try pAssignment
-  , try pTopExpr
-  , try pIf <?> "here if 163"
-  , try pIfElse
+  -- , try pTopExpr
+  -- , try pIf <?> "here if 163"
+  , try pIfElse <?> "in IF-ELSE statement"
   , pPass 
   ]
 
 
 pBlock :: Parser Stmt
 pBlock = do
-  statements <- many parseTokens
+  statements <- many parseStmt
   return $ SBlock statements
 
 

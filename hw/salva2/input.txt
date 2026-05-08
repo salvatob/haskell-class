@@ -1,11 +1,5 @@
-ligma = 5+p/d
-
-if p:
-  if x+a*3:
-    pass
-    pass
-  else:
-    b=5
-    pass
-
+l-1
+h(gf,2)
+l=4-p()
 pass
+frown
