@@ -1,11 +1,12 @@
-{-# LANGUAGE TypeFamilies #-}
+-- {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE LambdaCase #-}
 
 module Parser where
 
 import Control.Monad (void)
 import Data.Void (Void)
 import Lexer
-import Text.Megaparsec
+import Text.Megaparsec hiding (match)
 
 
 newtype Identifier = Identifier String
@@ -16,6 +17,7 @@ data Expr
   | ELit Int
   | EBinOp BinOp Expr Expr
   | EUnaryOp UnaryOp Expr
+  | EFuncCall Identifier [Expr]
   deriving (Show)
 
 data BinOp
@@ -39,18 +41,6 @@ data Stmt
 -- | The parser takes the tagged stream of tokens as an input
 type Parser = Parsec Void TokStream
 
--- | parse any amount of blanks
-blanks :: Parser ()
-blanks = void $ count 0 anySingle
--- blanks = void $ many (satisfy isBlank)
---   where
---     isBlank (TBlanks _) = True
---     isBlank _ = False
-
--- | eat blanks after a given parse
-pLexeme :: Parser a -> Parser a
--- pLexeme = (<* blanks)
-pLexeme = id
 
 match :: (Tok -> Maybe a) -> Parser a
 match f = do
@@ -59,6 +49,16 @@ match f = do
     Just x  -> pure x
     Nothing -> fail "unreachable"
 
+
+pIdentifier :: Parser Identifier
+pIdentifier = match (\case TIdentifier s -> Just (Identifier s); _ -> Nothing)
+
+pFuncCall :: Parser Expr
+pFuncCall = do
+  name <- pIdentifier
+  single TLeftPar
+
+  single TRightPar
 
 -- | parse a single integer
 pInt :: Parser Int
@@ -98,6 +98,8 @@ pOp = do
     isOp (TOp _) = True
     isOp _ = False
 
+cleanupNL :: Parser Stmt -> Parser Stmt
+cleanupNL p = p <* many (single TNewLine)
 
 pExpr :: Parser Expr
 pExpr = do
@@ -120,24 +122,26 @@ pBlock = do
 
 pIf :: Parser Stmt
 pIf = do
-  satisfy isIf
-  -- blanks
+  single TIf
   expr <- pExpr
-  satisfy isColon
+  single TColon
   SIf expr <$> pBlock
-  where
-    isIf TIf = True
-    isIf _ = False
-    isColon TColon = True
-    isColon _ = False
 
+pAssignment :: Parser Stmt
+pAssignment = do
+  ident <- pIdentifier
+  single TAssign
+  expr <- pExpr
+  return $ SAssign ident expr
 
+parseTokens = cleanupNL $ choice 
+  [ pAssignment
+  , pIf
+  , pBlock
+  ]
 
 parseExpr = runParser (pExpr <* eof)
 parseIf = runParser (pIf <* eof)
 
--- | eat 2 integers and a newline
-pairLine = (,) <$> pLexeme pInt <*> pLexeme pInt <* pLexeme (single TNewLine)
+runP = runParser (parseTokens <* eof)
 
--- | parse lots of integer pairs, each on a single line
-parsePairs = runParser (blanks *> many pairLine <* eof)
