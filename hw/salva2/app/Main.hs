@@ -2,32 +2,37 @@
 module Main where
 import Lexer
 import Parser
-import Text.Megaparsec
 import StackState
+import Printer
+import Text.Megaparsec
 
--- main = testStack [69]
+-- main = do
+--     -- In main or GHCi
+--   let ast = SIf (ELit 1) (SBlock [SPass])
+--   putStrLn $ printAST ast 
 
--- | a bit of demonstration
 main :: IO ()
 main = do
-
+  -- Get input file name from command line arguments, default to "input.txt"
+  -- args <- getArgs
+  -- let inputFile = if null args then "input.txt" else head args
   let inputFile = "input.txt"
-  input <- readFile inputFile
 
-  print "tokens incoming:"
-  let tokens = tokenize inputFile input
-  case tokens of
-    Right t -> print $ unT <$> unTokStream t
+  -- Read the source code
+  source <- readFile inputFile
+
+  -- Step 1: Tokenize
+  putStrLn "Tokens incoming:"
+  case tokenize inputFile source of
     Left err -> putStrLn $ errorBundlePretty err
+    Right tokStream -> do
+      let tokens = unT <$> unTokStream tokStream
+      print tokens  -- print the list of tokens (without T wrapper)
 
-  print "AST incoming:"
-  let ast =
-        case tokens of
-          Right t -> parseIf inputFile t
-          -- Left err -> Left err
-
-  case ast of
-    Right tree -> print tree
-    Left e -> putStrLn $ errorBundlePretty e
-
-  return ()
+      -- Step 2: Parse the token stream into an AST
+      putStrLn "\nAST incoming:"
+      case runP inputFile tokStream of
+        Left parseErr -> putStrLn $ errorBundlePretty parseErr
+        Right ast -> do
+          putStrLn $ printAST ast
+          putStrLn "\nParse successful!"
