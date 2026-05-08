@@ -37,6 +37,7 @@ data Tok
   | TIdentifier String -- represents a variable or function name
   | TIf
   | TElse
+  | TAssign
   | TFuncDef
   | TPass
   | TIndent
@@ -122,6 +123,7 @@ tok =
       tSimple TLeftPar '('
     , tSimple TRightPar ')'
     , tSimple TColon ':'
+    , tSimple TAssign '='
     , tOp
     , try tCharLiteral
     , try tIdentifier
