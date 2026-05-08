@@ -1,2 +1,11 @@
-if l>5:
+ligma = 5+p/d
+
+if p:
+  if x+a*3:
     pass
+    pass
+  else:
+    b=5
+    pass
+
+pass
