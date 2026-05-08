@@ -148,7 +148,6 @@ pIfElse = do
 
   pSeq [TElse, TColon]
   block2 <- pBlock
-  single TDedent
 
   return $ SIfElse cond block1 block2
 
@@ -165,23 +164,32 @@ pPass = do SPass <$ single TPass
 
 -- intentionally avoid parsing a block
 parseStmt :: Parser Stmt
-parseStmt = cleanupNL $ choice
-  [ fail "unreachable"
-  , try pAssignment
-  -- , try pTopExpr
-  -- , try pIf <?> "here if 163"
-  , try pIfElse <?> "in IF-ELSE statement"
-  , pPass 
+parseStmt = choice
+  [ pAssignment
+  , pTopExpr <?> "top level expression (func call)"
+  -- , try pIfElse <?> "an IF-ELSE statement"
+  , pIf <?> "an if statement"
+  , pPass
   ]
 
 
 pBlock :: Parser Stmt
 pBlock = do
-  statements <- many parseStmt
+  pSimple TIndent
+  statements <- many (parseStmt <* pSimple TNewLine) <?> "empty lines not possible in here"
+  pSimple TDedent
+  return $ SBlock statements
+
+
+pProgram :: Parser Stmt
+pProgram = do
+  statements <- many (parseStmt <* some (pSimple TNewLine)) <?> "empty lines not possible in here"
+  -- statements <- many (parseStmt <* some $ pSimple TNewLine) <?> "empty lines not possible in here"
+  -- statements <- many (cleanupNL parseStmt)
   return $ SBlock statements
 
 
 
 runP :: String -> TokStream -> Either (ParseErrorBundle TokStream Void) Stmt
-runP = runParser (pBlock <* eof)
+runP = runParser (pProgram <* eof)
 
