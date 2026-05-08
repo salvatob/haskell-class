@@ -8,11 +8,15 @@ import Prettyprinter
 import Prettyprinter.Render.String (renderString)
 import Parser
 
+
+prettyName :: Identifier -> Doc ann
+prettyName (Identifier i) = pretty i
+
 -- Convert an expression to a Doc with annotation type ()
 prettyExpr :: Expr -> Doc ()
 prettyExpr = \case
   ELit n      -> pretty n
-  EVar (Identifier v) -> pretty v
+  EVar v -> prettyName v
   EBinOp op l r ->
     -- Add parentheses around left/right if they have lower precedence
     -- (simplified: always wrap if needed, but here we keep it minimal)
@@ -39,7 +43,7 @@ prettyStmt n (SAssign (Identifier var) expr) =
 
 prettyStmt n (SIf cond thenStmt) =
   vsep
-    [ "if" <+> (parens (prettyExpr cond)) <+> "{"
+    [ "if" <+> parens (prettyExpr cond) <+> "{"
     , indent 2 (prettyStmt (n+2) thenStmt)
     , "}"
     ]
@@ -57,6 +61,14 @@ prettyStmt n (SExpr expr) = prettyExpr expr
 
 prettyStmt n (SBlock stmts) =
   vsep (map (prettyStmt n) stmts)
+
+prettyStmt n (SFuncDef name params body) =
+  vsep
+    [ "function" <+> prettyName name <> tupled (prettyName <$> params) <+> "{"
+      , indent 2 (prettyStmt (n+2) body)
+      , "}"
+    ]
+
 
 prettyAST :: Stmt -> Doc ()
 prettyAST = prettyStmt 0
