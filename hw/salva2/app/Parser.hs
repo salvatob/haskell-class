@@ -16,8 +16,10 @@ newtype Identifier =
 
 data Expr
   = EVar Identifier
-  | ELit Int
+  | EInt Int
+  | EFloat Float
   | EChar Char
+  | EString String
   | EBinOp BinOp Expr Expr
   | EUnaryOp UnaryOp Expr
   | EFuncCall Identifier [Expr]
@@ -113,6 +115,14 @@ pInt = do
     isInt (TInt _) = True
     isInt _ = False
 
+pFloat :: Parser Float
+pFloat = do
+  TFloat f <- satisfy isFloat <?> "a float literal"
+  return f
+  where
+    isFloat (TFloat _) = True
+    isFloat _ = False
+
 pChar :: Parser Char
 pChar = do
   TChar c <- satisfy isChar <?> "a character literal"
@@ -121,14 +131,26 @@ pChar = do
     isChar (TChar _) = True
     isChar _ = False
 
+pString :: Parser String
+pString = do
+  TString str <- satisfy isString <?> "a string literal"
+  return str
+  where
+    isString (TString _) = True
+    isString _ = False
+
 
 
 pAtom :: Parser Expr
 pAtom =
-   try pFuncCall -- or a result of a function call
-    <|> (ELit <$> pInt) -- number literal 
-    <|> (EChar <$> pChar) -- number literal 
-    <|> (EVar <$> pIdentifier) -- or a variable
+    try pFuncCall
+    <|> (EInt <$> pInt)
+    <|> (EFloat <$> pFloat)
+    <|> (EChar <$> pChar)
+    <|> (EString <$> pString)
+    <|> (EVar <$> pIdentifier)
+    <|> between (single TLeftPar) (single TRightPar) pExpr
+
 
 pOp :: Parser BinOp
 pOp = do
@@ -208,7 +230,7 @@ pReturn = do
 pAssignment :: Parser Stmt
 pAssignment = do
   ident <- pIdentifier
-  pSimple TAssign
+  try $ pSimple TAssign
   expr <- pExpr <?> "an expression to assing to the variable" ++ (show ident)
   return $ SAssign ident expr
 

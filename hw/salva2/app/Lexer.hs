@@ -26,6 +26,7 @@ data OpTok
  - because we need it to measure the indentation width. -}
 data Tok
   = TInt Int
+  | TFloat Float
   | TNewLine
   | TOp OpTok
   | TLeftPar
@@ -33,6 +34,7 @@ data Tok
   | TColon
   | TComma
   | TChar Char
+  | TString String
   | TIdentifier String -- represents a variable or function name
   | TIf
   | TElse
@@ -87,10 +89,15 @@ tOp = choice
 
 tCharLiteral :: Tokenizer (T Tok)
 tCharLiteral = do
-  char '\''
+  void $ char '\''
   c <- latin1Char
-  char '\''
+  void $ char '\''
   return $ T [c] (TChar c)
+
+tString :: Tokenizer (T Tok)
+tString = do
+  str <- between (char '"') (char '"') (many (anySingleBut '"'))
+  return $ T ("\"" ++ str ++ "\"") (TString str)
 
 -- TODO could be refactored into with the 'string¨' function
 tKeyword :: Tokenizer (T Tok)
@@ -106,15 +113,27 @@ tKeyword = do
     _ ->  fail $ "operator " ++ show word ++ " has not matched any known keyword"
 
 
--- TODO only works on alpha characters
 tSymbol :: Tokenizer (T Tok)
 tSymbol = do
-  word <-  some letterChar 
-  -- <*> many (alphaNumChar)
+  first <- letterChar <|> char '_'
+  rest <- many (alphaNumChar <|> char '_')
+  let word = first:rest
   return $ T word (TIdentifier word)
 
 tInt :: Tokenizer (T Tok)
 tInt = try ((T <$> id <*> TInt . read) <$> some digitChar)
+
+-- | Parses a sequence of digit characters with a dot char 
+tFloat :: Tokenizer (T Tok)
+tFloat = do
+  flr <- many digitChar
+  void $ single '.'
+  dec <- some digitChar
+  let firstPart = if null flr then "0" else flr
+  let res = read $ firstPart ++ "." ++ dec :: Float
+  return $ T (flr ++ "." ++ dec) (TFloat res)
+
+
 
 tNl :: Tokenizer (T Tok)
 tNl = tSimple TNewLine '\n'
@@ -123,19 +142,20 @@ tNl = tSimple TNewLine '\n'
 tok :: Tokenizer (T Tok)
 tok =
   lexeme $ choice
-    [
-    -- , (T <$> id <*> TBlanks . length) <$> some (char ' ')
-      tSimple TLeftPar '('
+    [ tSimple TLeftPar '('
     , tSimple TRightPar ')'
     , tSimple TColon ':'
     , tSimple TComma ','
     , tSimple TAssign '='
-    , tOp
+    , try tOp
     , try tCharLiteral
+    , try tString
     , try tKeyword
     , try tSymbol
-    , tInt
+    , try tFloat
+    , try tInt
     , try tCharLiteral
+    , anySingleBut '\n' >>= \c -> fail ("Unexpected character '" ++ [c] ++ "'")
     ]
 
 makeNl :: T Tok
@@ -150,15 +170,13 @@ makeDedent = T "DEDENT" TDedent
 
 -- |Returns a whole line (list of tokens without the newline)
 tLine :: Tokenizer [T Tok]
-tLine = do
-  line <- manyTill (many tok) (void newline <|> eof)
-  return $ concat line
+tLine = many tok <* (void newline <|> eof)
 
 -- |Consumes blank space before first non-whitespace character, returns the width.
 -- |Should be called right after newline token
 consumeBlanks :: Tokenizer Int
 consumeBlanks = do
-  spaces <- many (char ' ') -- TODO should handle whitespace better
+  spaces <- many (char ' ' <|> char '\t')
   let width = length spaces
   return width
 
@@ -199,21 +217,14 @@ flushStack = do
     Just w -> return $ replicate w makeDedent
 
 
-
 toks :: Tokenizer [T Tok]
-toks = go []
- where
-   go acc = do
-     -- Check if we’re already at EOF
-     done <- atEnd
-     if done
-       then do
-         dedents <- flushStack
-         return (acc ++ dedents ++ [makeNl])
-        --  return (acc ++ dedents)
-       else do
-         lineToks <- handleLine
-         go (acc ++ lineToks)
+toks = do
+   -- parse zero or more lines (each line already includes the newline token)
+  lineLists <- many (try handleLine)   -- try is needed if handleLine can fail?
+   -- check if we hit EOF
+  eof
+  dedents <- flushStack
+  return (concat lineLists ++ dedents ++ [makeNl])
 
 -- | A nice wrapper for the token stream (we'll need to make instances on this,
 -- so we want to have a type tag, not just a list alias).

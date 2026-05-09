@@ -16,8 +16,10 @@ prettyName (Identifier i) = pretty i
 -- Convert an expression to a Doc with annotation type ()
 prettyExpr :: Expr -> Doc ()
 prettyExpr = \case
-  ELit n      -> pretty n
+  EInt n      -> pretty n
+  EFloat f      -> pretty f
   EChar c      -> "'" <> pretty c <> "'"
+  EString str      -> "\"" <> pretty str <> "\""
   EVar v      -> prettyName v
   EBinOp op l r ->
     prettyExpr l <+> prettyOp op <+> prettyExpr r
