@@ -149,13 +149,6 @@ tLine = do
   line <- manyTill (many tok) (void newline <|> eof)
   return $ concat line
 
--- -- |Parse tokens until newline or EOF, returning the list of tokens and maybe the newline token.
--- tLine :: Tokenizer ([T Tok], Maybe (T Tok))
--- tLine = do
---   toks <- manyTill tok (void (lookAhead newline) <|> eof)
---   nl   <- optional newline
---   return (toks, nl)
-
 -- |Consumes blank space before first non-whitespace character, returns the width.
 -- |Should be called right after newline token
 consumeBlanks :: Tokenizer Int
@@ -201,9 +194,6 @@ flushStack = do
     Just w -> return $ replicate w makeDedent
 
 
--- toks :: Tokenizer [T Tok]
--- toks = many tok
-
 
 toks :: Tokenizer [T Tok]
 toks = go []
@@ -214,7 +204,8 @@ toks = go []
      if done
        then do
          dedents <- flushStack
-         return (acc ++ dedents)
+         return (acc ++ dedents ++ [makeNl])
+        --  return (acc ++ dedents)
        else do
          lineToks <- handleLine
          go (acc ++ lineToks)
