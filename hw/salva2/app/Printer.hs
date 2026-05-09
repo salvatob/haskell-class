@@ -3,7 +3,6 @@
 
 module Printer where
 
-
 import Prettyprinter
 import Prettyprinter.Render.String (renderString)
 import Parser
@@ -18,13 +17,12 @@ prettyName (Identifier i) = pretty i
 prettyExpr :: Expr -> Doc ()
 prettyExpr = \case
   ELit n      -> pretty n
-  EVar v -> prettyName v
+  EVar v      -> prettyName v
   EBinOp op l r ->
-    -- Add parentheses around left/right if they have lower precedence
-    -- (simplified: always wrap if needed, but here we keep it minimal)
     prettyExpr l <+> prettyOp op <+> prettyExpr r
   EUnaryOp Neg e -> "-" <> prettyExpr e
-  EFuncCall (Identifier name) args -> pretty name <> tupled (prettyExpr <$> args)
+  EFuncCall (Identifier name) args ->
+    pretty name <> tupled (prettyExpr <$> args)
 
 prettyOp :: BinOp -> Doc ()
 prettyOp = \case
@@ -36,46 +34,39 @@ prettyOp = \case
   Less   -> "<"
   Greater -> ">"
 
--- Indentation level (number of spaces) is passed as Int, but we use `indent` from the library
-prettyStmt :: Int -> Stmt -> Doc ()
-prettyStmt _ SPass = "pass"
 
-prettyStmt n (SAssign (Identifier var) expr) =
-  pretty var <+> "<-" <+> prettyExpr expr
+-- Statements: blocks print their own { and }, if/if-else delegate to the body
+prettyStmt :: Stmt -> Doc ()
+prettyStmt = \case
+  SPass -> "pass" <> ";"
 
-prettyStmt n (SIf cond thenStmt) =  "if" <+> parens (prettyExpr cond) <+>  (prettyStmt (n+tab_width) thenStmt)
-  -- vsep
-  --   [ "if" <+> parens (prettyExpr cond)
-  --   , indent tab_width (prettyStmt (n+tab_width) thenStmt)
-  --   ]
+  SAssign (Identifier var) expr ->
+    pretty var <+> "<-" <+> prettyExpr expr <> ";"
 
-prettyStmt n (SIfElse cond thenStmt elseStmt) =
-  vsep
-    [ "if" <+> parens (prettyExpr cond) <> "{"
-    , indent tab_width (prettyStmt (n+tab_width) thenStmt)
-    , "} else {"
-    , indent tab_width (prettyStmt (n+tab_width) elseStmt)
-    , "}"
-    ]
+  SIf cond body ->
+    "if" <+> parens (prettyExpr cond) <+> prettyStmt body
+  
+  SWhile cond body ->
+    "while" <+> parens (prettyExpr cond) <+> prettyStmt body
+      
+  SIfElse cond thenBody elseBody ->
+    "if" <+> parens (prettyExpr cond) <+> prettyStmt thenBody
+    <+> "else" <+> prettyStmt elseBody
 
-prettyStmt n (SExpr expr) = prettyExpr expr
+  SExpr expr ->
+    prettyExpr expr <> ";"
 
-prettyStmt n (SBlock stmts) = "{" <+>
-  vsep
-    [ vsep  (map (indent tab_width . prettyStmt n) stmts)
-    , "}"]
-
-prettyStmt n (SFuncDef name params body) =
-  vsep
-    [ "function" <+> prettyName name <> tupled (prettyName <$> params) <+> "{"
-      , indent tab_width (prettyStmt (n+tab_width) body)
-      , "}"
-    ]
-
+  SBlock stmts ->
+    "{" <> line <>
+    indent tab_width (vsep (map prettyStmt stmts)) <>
+    line <> "}"
+    
+  SFuncDef name params body ->
+    "function" <+> prettyName name <>
+    tupled (map prettyName params) <+> prettyStmt body
 
 prettyAST :: Program -> Doc ()
-prettyAST s = vsep $ prettyStmt 0 <$> s
-
+prettyAST stmts = vsep (map prettyStmt stmts)
 
 -- Render to a String with a default layout (80 columns)
 printAST :: Program -> String
