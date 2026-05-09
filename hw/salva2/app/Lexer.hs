@@ -172,6 +172,7 @@ makeDedent = T "DEDENT" TDedent
 tLine :: Tokenizer [T Tok]
 tLine = many tok <* (void newline <|> eof)
 
+
 -- |Consumes blank space before first non-whitespace character, returns the width.
 -- |Should be called right after newline token
 consumeBlanks :: Tokenizer Int
@@ -217,14 +218,22 @@ flushStack = do
     Just w -> return $ replicate w makeDedent
 
 
+
 toks :: Tokenizer [T Tok]
-toks = do
-   -- parse zero or more lines (each line already includes the newline token)
-  lineLists <- many (try handleLine)   -- try is needed if handleLine can fail?
-   -- check if we hit EOF
-  eof
-  dedents <- flushStack
-  return (concat lineLists ++ dedents ++ [makeNl])
+toks = go []
+ where
+   go acc = do
+     -- Check if we’re already at EOF
+     done <- atEnd
+     if done
+       then do
+         dedents <- flushStack
+         return (acc ++ dedents ++ [makeNl])
+       else do
+         lineToks <- handleLine
+         go (acc ++ lineToks)
+
+
 
 -- | A nice wrapper for the token stream (we'll need to make instances on this,
 -- so we want to have a type tag, not just a list alias).
