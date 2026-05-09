@@ -81,8 +81,6 @@ pFuncCall = do
   name <- pIdentifier
   pSimple TLeftPar
   args <- pList pExpr
-  -- first <- pExpr
-  -- rest <- many (single TComma *> pExpr)
   pSimple TRightPar
   return $ EFuncCall name args
 
@@ -178,8 +176,8 @@ cln = void $ some (single TNewLine)
 -- a whole shunning yard algorithm to parse infix operators just doesn't sound that fun 
 pExpr :: Parser Expr
 pExpr = do
-  first <- pAtom <?> "an integer"
-  rest <- many ((,) <$> pOp <*> pAtom)
+  first <- pAtom <?> "an expression"
+  rest <- many ((,) <$> pOp <*> pAtom) <?> "an expression"
   return $ foldl applyOp first rest
   where
     applyOp acc (op, val) = EBinOp op acc val
@@ -249,8 +247,8 @@ parseStmt =
     , pFuncDef
     , try pIfElse <?> "an IF-ELSE statement"
     , try pIf <?> "an if statement"
-    , try pWhile
-    , try pBlock
+    , pWhile
+    , pBlock
     ]
 
 type Program = [Stmt]
