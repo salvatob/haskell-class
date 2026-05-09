@@ -1,16 +1,15 @@
 {-# LANGUAGE TypeFamilies #-}
+
 module Lexer where
 
-import Data.Void (Void)
+import Control.Monad.State
 import Data.Bool (bool)
 import Data.List (intercalate)
 import Data.List.NonEmpty (NonEmpty(..))
+import Data.Void (Void)
+import StackState
 import Text.Megaparsec hiding (State)
 import Text.Megaparsec.Char
-import StackState
-import Control.Monad.State
-
-
 
 data OpTok
   = TPlusOp
@@ -65,13 +64,11 @@ isNewLine _ = False
 -- | The tokenizer eats normal Strings
 type Tokenizer = ParsecT Void String (State Stack)
 
-
 mySpace :: Tokenizer ()
 mySpace = void $ many (satisfy (`elem` [' ', '\t']))
 
 lexeme :: Tokenizer a -> Tokenizer a
 lexeme p = p <* mySpace -- Megaparsec.space consumes newlines, which we cannot do here
-
 
 tSimple :: Tok -> Char -> Tokenizer (T Tok)
 tSimple t c = T [c] t <$ char c
@@ -107,9 +104,9 @@ tKeyword = do
     "if"    -> pure $ T word TIf
     "else"  -> pure $ T word TElse
     "def"   -> pure $ T word TFuncDef
-    "while"   -> pure $ T word TWhile
+    "while" -> pure $ T word TWhile
     "pass"  -> pure $ T word TPass
-    "return"  -> pure $ T word TReturn
+    "return"-> pure $ T word TReturn
     _ ->  fail $ "operator " ++ show word ++ " has not matched any known keyword"
 
 
@@ -117,7 +114,7 @@ tSymbol :: Tokenizer (T Tok)
 tSymbol = do
   first <- letterChar <|> char '_'
   rest <- many (alphaNumChar <|> char '_')
-  let word = first:rest
+  let word = first : rest
   return $ T word (TIdentifier word)
 
 tInt :: Tokenizer (T Tok)
@@ -133,30 +130,30 @@ tFloat = do
   let res = read $ firstPart ++ "." ++ dec :: Float
   return $ T (flr ++ "." ++ dec) (TFloat res)
 
-
-
 tNl :: Tokenizer (T Tok)
 tNl = tSimple TNewLine '\n'
 
 -- | This parses out all tokens (you might want to extend the token count)
 tok :: Tokenizer (T Tok)
 tok =
-  lexeme $ choice
-    [ tSimple TLeftPar '('
-    , tSimple TRightPar ')'
-    , tSimple TColon ':'
-    , tSimple TComma ','
-    , tSimple TAssign '='
-    , try tOp
-    , try tCharLiteral
-    , try tString
-    , try tKeyword
-    , try tSymbol
-    , try tFloat
-    , try tInt
-    , try tCharLiteral
-    , anySingleBut '\n' >>= \c -> fail ("Unexpected character '" ++ [c] ++ "'")
-    ]
+  lexeme
+    $ choice
+        [ tSimple TLeftPar '('
+        , tSimple TRightPar ')'
+        , tSimple TColon ':'
+        , tSimple TComma ','
+        , tSimple TAssign '='
+        , try tOp
+        , try tCharLiteral
+        , try tString
+        , try tKeyword
+        , try tSymbol
+        , try tFloat
+        , try tInt
+        , try tCharLiteral
+        , anySingleBut '\n' >>= \c ->
+            fail ("Unexpected character '" ++ [c] ++ "'")
+        ]
 
 makeNl :: T Tok
 makeNl = T "\n" TNewLine
@@ -167,11 +164,9 @@ makeIndent = T "INDENT" TIndent
 makeDedent :: T Tok
 makeDedent = T "DEDENT" TDedent
 
-
 -- |Returns a whole line (list of tokens without the newline)
 tLine :: Tokenizer [T Tok]
 tLine = many tok <* (void newline <|> eof)
-
 
 -- |Consumes blank space before first non-whitespace character, returns the width.
 -- |Should be called right after newline token
@@ -185,7 +180,6 @@ handleLine :: Tokenizer [T Tok]
 handleLine = do
   indent <- consumeBlanks
   rest <- tLine
-
   case rest of
     [] -> return [makeNl] -- blank line
     line -> do
@@ -199,9 +193,10 @@ handleLine = do
 
             GT -> do
               lift $ push indent
-              return $ makeIndent: line ++ [makeNl]
-
-            LT -> do -- find, how many blocks we dedent by
+              return $ makeIndent : line ++ [makeNl]
+              
+            LT -- find, how many blocks we dedent by
+             -> do
               levels <- lift (popToWidth indent)
               case levels of
                 Nothing -> fail "invalid dedentation..."
@@ -209,47 +204,40 @@ handleLine = do
                   let ds = replicate l makeDedent
                   return $ ds ++ line ++ [makeNl]
 
-
 flushStack :: Tokenizer [T Tok]
 flushStack = do
   levels <- lift $ popToWidth 0
   case levels of
-    Nothing -> error "deverror - The indent stack was notinitiated with value 0."
+    Nothing ->
+      error "deverror - The indent stack was notinitiated with value 0."
     Just w -> return $ replicate w makeDedent
-
-
 
 toks :: Tokenizer [T Tok]
 toks = go []
- where
-   go acc = do
+  where
+    go acc = do
      -- Check if we’re already at EOF
-     done <- atEnd
-     if done
-       then do
-         dedents <- flushStack
-         return (acc ++ dedents ++ [makeNl])
-       else do
-         lineToks <- handleLine
-         go (acc ++ lineToks)
-
-
+      done <- atEnd
+      if done
+        then do
+          dedents <- flushStack
+          return (acc ++ dedents ++ [makeNl])
+        else do
+          lineToks <- handleLine
+          go (acc ++ lineToks)
 
 -- | A nice wrapper for the token stream (we'll need to make instances on this,
 -- so we want to have a type tag, not just a list alias).
 newtype TokStream = TokStream
   { unTokStream :: [T Tok]
   } deriving (Show)
-
   -- run the stateful parser with initial stack [0]
+
 tokenize :: String -> String -> Either (ParseErrorBundle String Void) TokStream
 tokenize fileName input =
   evalState (runParserT (TokStream <$> toks <* eof) fileName input) [0]
 
 -- tokenize = runParser (TokStream <$> toks <* eof)
-
-
-
 -- | This is a megaparsec Stream instance for our `TokStream`, which works as
 -- an adapter between our lists of labeled tokens and megaparsec. Essentially,
 -- it tells megaparsec how to consume the TokStream. Similar instances exist

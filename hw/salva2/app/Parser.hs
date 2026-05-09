@@ -70,10 +70,10 @@ pIdentifier =
     <?> "identifier"
 
 pList :: Parser p -> Parser [p]
-pList p = ( do
+pList p = do
   first <- p
   rest <- many (single TComma *> p)
-  return $ (first:rest))
+  return (first : rest)
   <|> pure []
 
 pFuncCall :: Parser Expr
@@ -84,18 +84,15 @@ pFuncCall = do
   pSimple TRightPar
   return $ EFuncCall name args
 
-
 pFuncDef :: Parser Stmt
 pFuncDef = do
   pSimple TFuncDef
   name <- pIdentifier <?> "function name"
   pSimple TLeftPar
   params <- pList pIdentifier
-
   pSeq [TRightPar, TColon]
   body <- parseStmt <?> "function body"
   return $ SFuncDef name params body
-
 
 pSimple :: Tok -> Parser ()
 pSimple t = void $ single t
@@ -137,18 +134,15 @@ pString = do
     isString (TString _) = True
     isString _ = False
 
-
-
 pAtom :: Parser Expr
 pAtom =
-    try pFuncCall
+  try pFuncCall
     <|> (EInt <$> pInt)
     <|> (EFloat <$> pFloat)
     <|> (EChar <$> pChar)
     <|> (EString <$> pString)
     <|> (EVar <$> pIdentifier)
     <|> between (single TLeftPar) (single TRightPar) pExpr
-
 
 pOp :: Parser BinOp
 pOp = do
@@ -182,13 +176,11 @@ pExpr = do
   where
     applyOp acc (op, val) = EBinOp op acc val
 
-
 -- | Parses an expression, without assingning the result. Mostly used for void func calls
 pTopExpr :: Parser Stmt
 pTopExpr = do
   e <- pExpr
   return $ SExpr e
-
 
 pIf :: Parser Stmt
 pIf = do
@@ -209,7 +201,6 @@ pIfElse = do
   block2 <- parseStmt
   return $ SIfElse cond block1 block2
 
-
 pWhile :: Parser Stmt
 pWhile = do
   pSimple TWhile
@@ -229,7 +220,7 @@ pAssignment :: Parser Stmt
 pAssignment = do
   ident <- pIdentifier
   try $ pSimple TAssign
-  expr <- pExpr <?> "an expression to assing to the variable" ++ (show ident)
+  expr <- pExpr <?> "an expression to assing to the variable" ++ show ident
   return $ SAssign ident expr
 
 pPass :: Parser Stmt
@@ -264,7 +255,7 @@ pBlock = do
 
 pProgram :: Parser Program
 pProgram = do
-    blankLines *> many (parseStmt <* blankLines)
+  blankLines *> many (parseStmt <* blankLines)
   where
     blankLines = many (pSimple TNewLine)
 
