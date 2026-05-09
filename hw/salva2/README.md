@@ -26,16 +26,15 @@ Moc hezky to hlídá nekonzistentní indentaci
 ```python
 def googoo(l):
    if g+l-looo :
-        if 5:
-          l(5)
-        else:
-          pass
+             if 5:
+                                l(5)
+             else:      pass
         
-        l=oooooo+4
+             l=oooooo+4
    pass
-
+if __name__ > "__main__":
+  if 1:if 2:if 3:if 4:5
 l=l(s)
-
 ```
 
 
@@ -45,14 +44,15 @@ function googoo(l) {
         if (5) {
             l(5);
         }
-         else {
-            pass;
-        }
-
+         else pass;
         l <- oooooo + 4;
     }
 
     pass;
+}
+
+if (__name__ > "__main__") {
+    if (1) if (2) if (3) if (4) 5;
 }
 
 l <- l(s);
