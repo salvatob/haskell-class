@@ -27,8 +27,6 @@ data OpTok
 data Tok
   = TInt Int
   | TNewLine
-  -- | TBlanks Int
-  -- | TOp Char -- operators + - * / % < > 
   | TOp OpTok
   | TLeftPar
   | TRightPar
@@ -135,6 +133,7 @@ tok =
     , try tKeyword
     , try tSymbol
     , tInt
+    , try tCharLiteral
     ]
 
 makeNl :: T Tok

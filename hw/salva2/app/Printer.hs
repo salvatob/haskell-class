@@ -17,6 +17,7 @@ prettyName (Identifier i) = pretty i
 prettyExpr :: Expr -> Doc ()
 prettyExpr = \case
   ELit n      -> pretty n
+  EChar c      -> "'" <> pretty c <> "'"
   EVar v      -> prettyName v
   EBinOp op l r ->
     prettyExpr l <+> prettyOp op <+> prettyExpr r

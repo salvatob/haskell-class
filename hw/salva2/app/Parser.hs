@@ -17,6 +17,7 @@ newtype Identifier =
 data Expr
   = EVar Identifier
   | ELit Int
+  | EChar Char
   | EBinOp BinOp Expr Expr
   | EUnaryOp UnaryOp Expr
   | EFuncCall Identifier [Expr]
@@ -105,19 +106,28 @@ pSeq = mapM_ single
 -- | parse a single integer
 pInt :: Parser Int
 pInt = do
-  {- the line below carries an additional label for error messages (this allows
-   - the parser to print stuff like "expected an integer") -}
   TInt i <- satisfy isInt <?> "an integer literal"
   return i
   where
     isInt (TInt _) = True
     isInt _ = False
 
+pChar :: Parser Char
+pChar = do
+  TChar c <- satisfy isChar <?> "a character literal"
+  return c
+  where
+    isChar (TChar _) = True
+    isChar _ = False
+
+
+
 pAtom :: Parser Expr
 pAtom =
    try pFuncCall -- or a result of a function call
     <|> (ELit <$> pInt) -- number literal 
-    <|> ( EVar <$> pIdentifier) -- or a variable
+    <|> (EChar <$> pChar) -- number literal 
+    <|> (EVar <$> pIdentifier) -- or a variable
 
 pOp :: Parser BinOp
 pOp = do
