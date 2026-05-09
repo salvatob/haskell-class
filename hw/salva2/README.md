@@ -5,6 +5,8 @@ Zadání bylo podstatně složitější než jsem čekal (indentace v tokenizát
 Přikládám tedy pár zajímavějších fíčur co jsem udělal:
 
 Umí to parsovat věci jako floaty, stringy, uzávorkované výrazy...
+
+
 """python
 x=.2
 h="Hello World!"
@@ -12,7 +14,8 @@ c='p'
 r = 2*(a+b)
 """
 
-"""javascript
+
+"""js
 x <- 0.2;
 h <- "Hello World!";
 c <- 'p';
@@ -41,7 +44,7 @@ def all_parenthesizations(n, left, right, current_variation):
 all_parenthesizations(int(input()) * 2)
 """
 
-"""javascript
+"""js
 function all_parenthesizations(n, left, right, current_variation) {
     if (left - right < n) {
         current_variation_append(")" * n);
