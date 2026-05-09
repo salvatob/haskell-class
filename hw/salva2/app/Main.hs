@@ -43,8 +43,8 @@ ast = [
     SIf (ELit 0) (SBlock [SExpr $ EFuncCall (Identifier "f") []])
     ]
   ]
-
-main :: IO ()
-main = do
-  putStrLn $ printAST ast 
+main = doFile
+-- main :: IO ()
+-- main = do
+--   putStrLn $ printAST ast 
 

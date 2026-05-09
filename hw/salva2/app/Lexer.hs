@@ -94,8 +94,8 @@ tCharLiteral = do
   return $ T [c] (TChar c)
 
 -- TODO could be refactored into with the 'string¨' function
-tIdentifier :: Tokenizer (T Tok)
-tIdentifier = do
+tKeyword :: Tokenizer (T Tok)
+tKeyword = do
   word <- some letterChar
   case word of
     "if"    -> pure $ T word TIf
@@ -106,9 +106,11 @@ tIdentifier = do
     _ ->  fail $ "operator " ++ show word ++ " has not matched any known keyword"
 
 
+-- TODO only works on alpha characters
 tSymbol :: Tokenizer (T Tok)
 tSymbol = do
-  word <- some letterChar
+  word <-  some letterChar 
+  -- <*> many (alphaNumChar)
   return $ T word (TIdentifier word)
 
 tInt :: Tokenizer (T Tok)
@@ -130,7 +132,7 @@ tok =
     , tSimple TAssign '='
     , tOp
     , try tCharLiteral
-    , try tIdentifier
+    , try tKeyword
     , try tSymbol
     , tInt
     ]
@@ -190,7 +192,7 @@ handleLine = do
 
 flushStack :: Tokenizer [T Tok]
 flushStack = do
-  levels <- lift $ popToWidth 0 
+  levels <- lift $ popToWidth 0
   case levels of
     Nothing -> error "deverror - The indent stack was notinitiated with value 0."
     Just w -> return $ replicate w makeDedent
