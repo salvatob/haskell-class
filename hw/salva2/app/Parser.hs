@@ -40,6 +40,7 @@ data Stmt
   = SBlock [Stmt]
   | SAssign Identifier Expr
   | SIf Expr Stmt
+  | SWhile Expr Stmt
   | SIfElse Expr Stmt Stmt
   | SExpr Expr
   | SFuncDef Identifier [Identifier] Stmt
@@ -178,6 +179,17 @@ pIfElse = do
   block2 <- pBlock
   return $ SIfElse cond block1 block2
 
+
+pWhile :: Parser Stmt
+pWhile = do
+  pSimple TWhile
+  cond <- pExpr <?> "a condition expression"
+  pSimple TColon
+  body <- parseStmt
+  return $ SWhile cond body
+  <?> "a while statement"
+
+
 pAssignment :: Parser Stmt
 pAssignment = do
   ident <- pIdentifier
@@ -199,6 +211,7 @@ parseStmt =
     , pFuncDef
     , try pIfElse <?> "an IF-ELSE statement"
     , try pIf <?> "an if statement"
+    , try pWhile
     , try pBlock
     ]
 

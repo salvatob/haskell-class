@@ -38,6 +38,7 @@ data Tok
   | TIdentifier String -- represents a variable or function name
   | TIf
   | TElse
+  | TWhile
   | TAssign
   | TFuncDef
   | TPass
@@ -100,6 +101,7 @@ tIdentifier = do
     "if"    -> pure $ T word TIf
     "else"  -> pure $ T word TElse
     "def"   -> pure $ T word TFuncDef
+    "while"   -> pure $ T word TWhile
     "pass"  -> pure $ T word TPass
     _ ->  fail $ "operator " ++ show word ++ " has not matched any known keyword"
 
