@@ -6,17 +6,15 @@ import StackState
 import Printer
 import Text.Megaparsec
 
--- main = do
---     -- In main or GHCi
---   let ast = SIf (ELit 1) (SBlock [SPass])
---   putStrLn $ printAST ast 
 
-main :: IO ()
-main = do
+doFile :: IO ()
+doFile = do
   -- Get input file name from command line arguments, default to "input.txt"
   -- args <- getArgs
   -- let inputFile = if null args then "input.txt" else head args
+  
   let inputFile = "input.txt"
+  -- let inputFile = "good_input.txt"
 
   -- Read the source code
   source <- readFile inputFile
@@ -36,3 +34,17 @@ main = do
         Right ast -> do
           putStrLn $ printAST ast
           putStrLn "\nParse successful!"
+
+
+ast :: Program
+ast = [
+  SAssign (Identifier "pp") (ELit 69),
+  SBlock [
+    SIf (ELit 0) (SBlock [SExpr $ EFuncCall (Identifier "f") []])
+    ]
+  ]
+
+main :: IO ()
+main = do
+  putStrLn $ printAST ast 
+
