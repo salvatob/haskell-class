@@ -87,7 +87,7 @@ pFuncDef = do
   name <- pIdentifier <?> "function name"
   pSimple TLeftPar
   params <- pList pIdentifier
-  
+
   pSeq [TRightPar, TColon, TNewLine]
 
   body <- pBlock <?> "function body"
@@ -114,9 +114,9 @@ pInt = do
 
 pAtom :: Parser Expr
 pAtom =
-  (ELit <$> pInt) -- number literal 
+   try pFuncCall -- or a result of a function call
+    <|> (ELit <$> pInt) -- number literal 
     <|> ( EVar <$> pIdentifier) -- or a variable
-    <|> pFuncCall -- or a result of a function call
 
 pOp :: Parser BinOp
 pOp = do
@@ -193,13 +193,16 @@ pPass = do
 parseStmt :: Parser Stmt
 parseStmt =
   choice
-    [ pPass <* cln
-    , pTopExpr <* cln <?> "top level expression (func call)"
-    , pAssignment <* cln
+    [ try $ pAssignment <* cln
+    , try (pTopExpr <* cln) <?> "top level expression (func call)"
+    , pPass <* cln
     , pFuncDef
     , try pIfElse <?> "an IF-ELSE statement"
     , try pIf <?> "an if statement"
+    , try pBlock
     ]
+
+type Program = [Stmt]
 
 pBlock :: Parser Stmt
 pBlock = do
@@ -210,13 +213,12 @@ pBlock = do
   pSimple TDedent
   return $ SBlock statements
 
-pProgram :: Parser Stmt
+pProgram :: Parser Program
 pProgram = do
-  statements <-
     many (parseStmt <* many (pSimple TNewLine))
       -- <?> "empty lines not possible in here"
-  return $ SBlock statements
+  
 
-runP :: String -> TokStream -> Either (ParseErrorBundle TokStream Void) Stmt
+runP :: String -> TokStream -> Either (ParseErrorBundle TokStream Void) Program
 runP = runParser (pProgram <* eof)
 -- runP = runParser (pIfElse <* eof)
