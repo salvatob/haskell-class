@@ -7,24 +7,24 @@ Přikládám tedy pár zajímavějších fíčur co jsem udělal:
 Umí to parsovat věci jako floaty, stringy, uzávorkované výrazy...
 
 
-"""python
+```python
 x=.2
 h="Hello World!"
 c='p'
 r = 2*(a+b)
-"""
+```
 
 
-"""js
+```js
 x <- 0.2;
 h <- "Hello World!";
 c <- 'p';
 r <- 2 * a + b;
-"""
+```
 
 
 Tady jsem vyhrabal a trošičku uúravil nejaký úkol z PRG1.
-"""python
+```python
 def all_parenthesizations(n, left, right, current_variation):
     if left - right < n:
         current_variation_append(")" * n)
@@ -42,9 +42,9 @@ def all_parenthesizations(n, left, right, current_variation):
 
 
 all_parenthesizations(int(input()) * 2)
-"""
+```
 
-"""js
+```js
 function all_parenthesizations(n, left, right, current_variation) {
     if (left - right < n) {
         current_variation_append(")" * n);
@@ -65,4 +65,4 @@ function all_parenthesizations(n, left, right, current_variation) {
 }
 
 all_parenthesizations(int(input()) * 2);
-"""
+```
