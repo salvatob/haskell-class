@@ -42,6 +42,7 @@ data Tok
   | TPass
   | TIndent
   | TDedent
+  | TReturn
   deriving (Show, Eq, Ord)
 
 -- | We use this function to show the tokens in error messages from the parser,
@@ -101,6 +102,7 @@ tKeyword = do
     "def"   -> pure $ T word TFuncDef
     "while"   -> pure $ T word TWhile
     "pass"  -> pure $ T word TPass
+    "return"  -> pure $ T word TReturn
     _ ->  fail $ "operator " ++ show word ++ " has not matched any known keyword"
 
 

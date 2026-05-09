@@ -45,6 +45,7 @@ data Stmt
   | SIfElse Expr Stmt Stmt
   | SExpr Expr
   | SFuncDef Identifier [Identifier] Stmt
+  | SReturn Expr
   | SPass
   deriving (Show)
 
@@ -198,6 +199,11 @@ pWhile = do
   return $ SWhile cond body
   <?> "a while statement"
 
+pReturn :: Parser Stmt
+pReturn = do
+  pSimple TReturn
+  expr <- pExpr <?> "the value to return"
+  return $ SReturn expr
 
 pAssignment :: Parser Stmt
 pAssignment = do
@@ -217,6 +223,7 @@ parseStmt =
     [ try (pAssignment <* cln) <?> "an assignment expression"
     , try (pTopExpr <* cln) <?> "top level expression (func call)"
     , pPass <* cln
+    , try (pReturn <* cln) <?> "return call"
     , pFuncDef
     , try pIfElse <?> "an IF-ELSE statement"
     , try pIf <?> "an if statement"

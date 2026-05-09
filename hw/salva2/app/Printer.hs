@@ -66,6 +66,8 @@ prettyStmt = \case
     "function" <+> prettyName name <>
     tupled (map prettyName params) <+> prettyStmt body
 
+  SReturn expr -> "return" <+> prettyExpr expr <> ";"
+
 prettyAST :: Program -> Doc ()
 prettyAST stmts = vsep (map prettyStmt stmts)
 
