@@ -66,10 +66,11 @@ pIdentifier =
     <?> "identifier"
 
 pList :: Parser p -> Parser [p]
-pList p = do
+pList p = ( do
   first <- p
   rest <- many (single TComma *> p)
-  return $ (first:rest)
+  return $ (first:rest))
+  <|> pure []
 
 pFuncCall :: Parser Expr
 pFuncCall = do
@@ -89,9 +90,8 @@ pFuncDef = do
   pSimple TLeftPar
   params <- pList pIdentifier
 
-  pSeq [TRightPar, TColon, TNewLine]
-
-  body <- pBlock <?> "function body"
+  pSeq [TRightPar, TColon]
+  body <- parseStmt <?> "function body"
   return $ SFuncDef name params body
 
 
@@ -163,8 +163,8 @@ pIf :: Parser Stmt
 pIf = do
   pSimple TIf
   cond <- pExpr <?> "a condition expression"
-  pSeq [TColon, TNewLine]
-  body <- pBlock
+  pSeq [TColon]
+  body <- parseStmt
   return $ SIf cond body
   <?> "an if statement"
 
@@ -172,11 +172,10 @@ pIfElse :: Parser Stmt
 pIfElse = do
   pSimple TIf
   cond <- pExpr
-  pSeq [TColon, TNewLine]
-  block1 <- pBlock
+  pSeq [TColon]
+  block1 <- parseStmt
   pSeq [TElse, TColon]
-  pSimple TNewLine
-  block2 <- pBlock
+  block2 <- parseStmt
   return $ SIfElse cond block1 block2
 
 
@@ -194,7 +193,7 @@ pAssignment :: Parser Stmt
 pAssignment = do
   ident <- pIdentifier
   pSimple TAssign
-  expr <- pExpr
+  expr <- pExpr <?> "an expression to assing to the variable" ++ (show ident)
   return $ SAssign ident expr
 
 pPass :: Parser Stmt
@@ -205,7 +204,7 @@ pPass = do
 parseStmt :: Parser Stmt
 parseStmt =
   choice
-    [ try $ pAssignment <* cln
+    [ try (pAssignment <* cln) <?> "an assignment expression"
     , try (pTopExpr <* cln) <?> "top level expression (func call)"
     , pPass <* cln
     , pFuncDef
@@ -219,6 +218,7 @@ type Program = [Stmt]
 
 pBlock :: Parser Stmt
 pBlock = do
+  pSimple TNewLine
   pSimple TIndent
   -- statements <- many (parseStmt <* pSimple TNewLine) <?> "empty lines not possible in here"
   statements <- sepBy1 parseStmt (many (single TNewLine)) -- at least one newline between stmts
@@ -228,9 +228,10 @@ pBlock = do
 
 pProgram :: Parser Program
 pProgram = do
-    many (parseStmt <* many (pSimple TNewLine))
+    blankLines *> many (parseStmt <* blankLines)
       -- <?> "empty lines not possible in here"
-  
+  where
+    blankLines = many (pSimple TNewLine)
 
 runP :: String -> TokStream -> Either (ParseErrorBundle TokStream Void) Program
 runP = runParser (pProgram <* eof)
