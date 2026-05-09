@@ -1,11 +1,2 @@
-def googoo(l):
-   if g+l :
-        if 5:
-          l(5)
-        else:
-          pass
-        
-        l=oooooo+4
-   pass
-
-l=l(s)
+if x: d
+else: g

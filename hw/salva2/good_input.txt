@@ -1,5 +1,5 @@
 def googoo(l):
-   if g+l :
+   if g+l-looo :
         if 5:
           l(5)
         else:
