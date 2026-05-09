@@ -8,6 +8,8 @@ import Prettyprinter
 import Prettyprinter.Render.String (renderString)
 import Parser
 
+tab_width :: Int
+tab_width = 4
 
 prettyName :: Identifier -> Doc ann
 prettyName (Identifier i) = pretty i
@@ -41,39 +43,40 @@ prettyStmt _ SPass = "pass"
 prettyStmt n (SAssign (Identifier var) expr) =
   pretty var <+> "<-" <+> prettyExpr expr
 
-prettyStmt n (SIf cond thenStmt) =
-  vsep
-    [ "if" <+> parens (prettyExpr cond) <+> "{"
-    , indent 2 (prettyStmt (n+2) thenStmt)
-    , "}"
-    ]
+prettyStmt n (SIf cond thenStmt) =  "if" <+> parens (prettyExpr cond) <+>  (prettyStmt (n+tab_width) thenStmt)
+  -- vsep
+  --   [ "if" <+> parens (prettyExpr cond)
+  --   , indent tab_width (prettyStmt (n+tab_width) thenStmt)
+  --   ]
 
 prettyStmt n (SIfElse cond thenStmt elseStmt) =
   vsep
     [ "if" <+> parens (prettyExpr cond) <> "{"
-    , indent 2 (prettyStmt (n+2) thenStmt)
+    , indent tab_width (prettyStmt (n+tab_width) thenStmt)
     , "} else {"
-    , indent 2 (prettyStmt (n+2) elseStmt)
+    , indent tab_width (prettyStmt (n+tab_width) elseStmt)
     , "}"
     ]
 
 prettyStmt n (SExpr expr) = prettyExpr expr
 
-prettyStmt n (SBlock stmts) =
-  vsep (map (prettyStmt n) stmts)
+prettyStmt n (SBlock stmts) = "{" <+>
+  vsep
+    [ vsep  (map (indent tab_width . prettyStmt n) stmts)
+    , "}"]
 
 prettyStmt n (SFuncDef name params body) =
   vsep
     [ "function" <+> prettyName name <> tupled (prettyName <$> params) <+> "{"
-      , indent 2 (prettyStmt (n+2) body)
+      , indent tab_width (prettyStmt (n+tab_width) body)
       , "}"
     ]
 
 
-prettyAST :: Stmt -> Doc ()
-prettyAST = prettyStmt 0
+prettyAST :: Program -> Doc ()
+prettyAST s = vsep $ prettyStmt 0 <$> s
 
 
 -- Render to a String with a default layout (80 columns)
-printAST :: Stmt -> String
+printAST :: Program -> String
 printAST = renderString . layoutPretty defaultLayoutOptions . prettyAST
