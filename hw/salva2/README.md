@@ -22,8 +22,44 @@ c <- 'p';
 r <- 2 * a + b;
 ```
 
+Moc hezky to hlídá nekonzistentní indentaci
+```python
+def googoo(l):
+   if g+l-looo :
+        if 5:
+          l(5)
+        else:
+          pass
+        
+        l=oooooo+4
+   pass
 
-Tady jsem vyhrabal a trošičku uúravil nejaký úkol z PRG1.
+l=l(s)
+
+```
+
+
+```js
+function googoo(l) {
+    if (g + l - looo) {
+        if (5) {
+            l(5);
+        }
+         else {
+            pass;
+        }
+
+        l <- oooooo + 4;
+    }
+
+    pass;
+}
+
+l <- l(s);
+```
+
+
+Tady jsem vyhrabal a trošičku upravil nejaký úkol z PRG1.
 ```python
 def all_parenthesizations(n, left, right, current_variation):
     if left - right < n:
