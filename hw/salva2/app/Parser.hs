@@ -228,10 +228,9 @@ type Program = [Stmt]
 
 pBlock :: Parser Stmt
 pBlock = do
-  pSimple TNewLine
+  void $ optional (single TNewLine)
   pSimple TIndent
-  -- statements <- many (parseStmt <* pSimple TNewLine) <?> "empty lines not possible in here"
-  statements <- sepBy1 parseStmt (many (single TNewLine)) -- at least one newline between stmts
+  statements <- sepBy1 parseStmt (many (single TNewLine))
   _ <- many (single TNewLine)
   pSimple TDedent
   return $ SBlock statements
@@ -239,10 +238,8 @@ pBlock = do
 pProgram :: Parser Program
 pProgram = do
     blankLines *> many (parseStmt <* blankLines)
-      -- <?> "empty lines not possible in here"
   where
     blankLines = many (pSimple TNewLine)
 
 runP :: String -> TokStream -> Either (ParseErrorBundle TokStream Void) Program
 runP = runParser (pProgram <* eof)
--- runP = runParser (pIfElse <* eof)
