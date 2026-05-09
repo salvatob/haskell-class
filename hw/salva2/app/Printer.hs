@@ -63,6 +63,7 @@ prettyStmt = \case
     "{" <> line <>
     indent tab_width (vsep (map prettyStmt stmts)) <>
     line <> "}"
+    <> line
     
   SFuncDef name params body ->
     "function" <+> prettyName name <>
