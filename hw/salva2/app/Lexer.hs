@@ -107,7 +107,7 @@ tKeyword = do
     "while" -> pure $ T word TWhile
     "pass"  -> pure $ T word TPass
     "return"-> pure $ T word TReturn
-    _ ->  fail $ "operator " ++ show word ++ " has not matched any known keyword"
+    _ ->  fail $ "identificator " ++ show word ++ " has not matched any known keyword"
 
 
 tSymbol :: Tokenizer (T Tok)
@@ -150,7 +150,6 @@ tok =
         , try tSymbol
         , try tFloat
         , try tInt
-        , try tCharLiteral
         , anySingleBut '\n' >>= \c ->
             fail ("Unexpected character '" ++ [c] ++ "'")
         ]
@@ -172,7 +171,7 @@ tLine = many tok <* (void newline <|> eof)
 -- |Should be called right after newline token
 consumeBlanks :: Tokenizer Int
 consumeBlanks = do
-  spaces <- many (char ' ' <|> char '\t')
+  spaces <- many (char ' ')
   let width = length spaces
   return width
 
@@ -202,7 +201,7 @@ handleLine = do
                 Nothing -> fail "invalid dedentation..."
                 Just l -> do
                   let ds = replicate l makeDedent
-                  return $ ds ++ line ++ [makeNl]
+                  return $ ds ++ line ++ [makeNl] -- last newline is actually very important for the parser
 
 flushStack :: Tokenizer [T Tok]
 flushStack = do
