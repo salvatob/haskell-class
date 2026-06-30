@@ -1,8 +1,9 @@
+{-# LANGUAGE PatternGuards #-}
 
 import Control.Monad
 import Data.List
 import System.Exit (exitSuccess)
-
+import Debug.Trace (trace)
 import Graphics.Gloss
 import Graphics.Gloss.Interface.Pure.Game
 -- import Graphics.Gloss.Interface.IO.Interact
@@ -11,12 +12,15 @@ import Graphics.Gloss.Interface.IO.Game
 import qualified Data.Set as Set
 import qualified Data.Map.Strict as Map
 
+import Channel
+
+
 data Shard
   = S
   | E
   | N
   | W
-  deriving (Show, Read, Eq, Bounded, Enum)
+  deriving (Show, Read, Eq, Bounded, Enum, Ord)
 
 type Pos = (Int, Int)
 
@@ -31,12 +35,22 @@ data St
   | Dragging Tile [Tile]
   deriving (Show)
 
+type ServerInfo = Int
+
+data World = World {
+  local :: St,
+  server :: ServerInfo
+}
+
+addCx :: (Num a, Num b) => (a, b) -> (a, b) -> (a, b)
 addCx (a, b) (c, d) = (a + c, b + d)
 
+succBnd :: (Eq a, Bounded a, Enum a) => a -> a
 succBnd c
   | c == maxBound = minBound
   | otherwise = succ c
 
+flipVShard :: Shard -> Shard
 flipVShard N = S
 flipVShard S = N
 flipVShard x = x
@@ -49,6 +63,7 @@ flipV = map $ \((x, y), ss) -> ((x, negate y), map flipVShard ss)
 
 flipH = rotL . flipV . rotR
 
+startingTiles :: [Tile]
 startingTiles =
   [ Tile (0, 0) [((0, 0), [S, E, N, W])]
   , Tile (1, 0) [((0, 0), [N, W])]
@@ -58,13 +73,16 @@ startingTiles =
   , Tile (4, 0) [((0, 0), [S, E, N, W])]
   ]
 
+cplx :: (Integral a1, Integral a2, Num t1, Num t2) => (t1 -> t2 -> t3) -> (a1, a2) -> t3
 cplx f (a, b) = f (fromIntegral a) (fromIntegral b)
 
+unSq :: p -> p -> p -> p -> Shard -> p
 unSq s _ _ _ S = s
 unSq _ e _ _ E = e
 unSq _ _ n _ N = n
 unSq _ _ _ w W = w
 
+drawSq :: [Shard] -> Picture
 drawSq =
   Pictures
     . map
@@ -74,26 +92,51 @@ drawSq =
            (Polygon [(1, 1), (0, 1), (0.5, 0.5)])
            (Polygon [(0, 1), (0, 0), (0.5, 0.5)]))
 
+renderTile :: Tile -> Picture
 renderTile (Tile pos subs) =
   cplx Translate pos
     $ Pictures [cplx Translate spos $ drawSq sq | (spos, sq) <- subs]
 
+renderTiles :: [Tile] -> Picture
 renderTiles = Pictures . map renderTile
 
-initialState = Selecting t ts
+initialWorld :: World
+initialWorld = World local server
   where
     (t:ts) = startingTiles
+    local = Selecting t ts
+    server = 0
 
-render = Scale 100 100 . go
+render :: World -> Picture
+render (World l s) =
+  let
+    localP = renderLocal l
+    serverP = renderServer s
+  in
+    Pictures [localP, serverP]
+
+renderLocal :: St -> Picture
+renderLocal = Scale 100 100 . go
   where
     go (Selecting t ts) =
       Pictures [renderTiles ts, Color (greyN 0.2) $ renderTile t]
     go (Dragging t ts) = Pictures [renderTiles ts, Color red $ renderTile t]
 
-event (EventKey (SpecialKey k) Down _ _) st = skEvent k st
-event (EventKey (Char c) Down _ _) st = ltrEvent c st
-event _ tiles = tiles
 
+renderServer :: ServerInfo -> Picture
+renderServer i = 
+        translate (-600) 380 $
+         scale 0.5 0.5
+        $ color red
+        $ Text $ show i
+
+
+localEvent :: Event -> St -> St
+localEvent (EventKey (SpecialKey k) Down _ _) st = skEvent k st
+localEvent (EventKey (Char c) Down _ _) st = ltrEvent c st
+localEvent _ tiles = tiles
+
+skEvent :: SpecialKey -> St -> St
 skEvent KeyTab (Selecting t ts) =
   let (t':ts') = ts ++ [t]
    in Selecting t' ts'
@@ -106,6 +149,7 @@ skEvent arr (Dragging (Tile p ss) ts)
   | KeyDown <- arr = Dragging (Tile (addCx p (0, -1)) ss) ts
 skEvent _ st = st
 
+ltrEvent :: Char -> St -> St
 ltrEvent k (Dragging (Tile p ss) ts)
   | k == 'z' = Dragging (Tile p $ rotL ss) ts
   | k == 'c' = Dragging (Tile p $ rotR ss) ts
@@ -113,37 +157,57 @@ ltrEvent k (Dragging (Tile p ss) ts)
   | k == 'v' = Dragging (Tile p $ flipV ss) ts
 ltrEvent _ st = st
 
-upd _ tiles = tiles
-updIO _ tiles = pure tiles
-
 type SubTile = (Int, Int, Shard)
 
 type ClientCoverage = Set.Set SubTile
 
 type ServerCoverage = Map.Map SubTile Int
 
+getTiles :: St -> [Tile]
+getTiles (Selecting t ts) = t:ts
+getTiles (Dragging t ts) = t:ts
 
-insertTile :: Tile -> ClientCoverage
-insertTile (Tile (x,y), shards) = 
+toClientCoverage :: St -> ClientCoverage
+toClientCoverage st =
   let
-    ((dx,dy), ss) = head shards
-    set = Set.empty
-    set1 = insert ((x+dx, y+dy, head ss)) set
+    tiles = getTiles st
+  in
+    Set.fromList
+      [ (tx + dx, ty + dy, shard)
+      | Tile (tx, ty) subs <- tiles
+      , ((dx, dy), shards) <- subs
+      , shard <- shards
+      ]
 
-    filled = insert (x,y,head tileData) s
+toServerCoverage :: [ClientCoverage] -> ServerCoverage
+toServerCoverage =
+  foldl'
+    (Set.foldl'
+         (\acc subtile -> Map.insertWith (+) subtile 1 acc))
+    Map.empty
 
--- toClientCoverage :: [Tile] -> ClientCoverage
--- toClientCoverage (t:_) = 
---   let
---     ((x, y), tileData) = t
---     first
---     s = Set.empty
 
---     filled = insert (x,y,head tileData) s
-
--- main = play FullScreen white 20 initialState render event upd
-eventIO :: Event -> St -> IO St
+eventIO :: Event -> World -> IO World
 eventIO (EventKey (SpecialKey KeyEsc) Down _ _) _ = do exitSuccess
-eventIO e s = pure $ event e s
+eventIO (EventKey (Char 'i') Down _ _) w = pure $ w {server = server w + 1}
+eventIO e s = pure $ s { local = localEvent e (local s) }
 
-main = playIO FullScreen white 20 initialState (pure . render) eventIO updIO
+
+parseServerWorld :: String -> ServerInfo
+parseServerWorld = read
+
+-- doesnt even have to be IO since I just used trace xddd
+-- updIO :: Applicative f => p -> a -> f a
+updIO :: Float -> World -> IO World
+-- updIO _ tiles = trace (show $ toClientCoverage (local tiles)) (pure tiles)
+updIO _ world = do 
+  newServerState <- updateFromServer
+
+  case newServerState of
+    Nothing -> pure world
+    Just s  -> pure (world {server = parseServerWorld s})
+
+
+
+main :: IO ()
+main = playIO FullScreen white 20 initialWorld (pure . render) eventIO updIO
