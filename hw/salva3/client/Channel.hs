@@ -20,23 +20,20 @@ type SharedWorldRef = MVar ServerInfo
 
 
 parseServerWorld :: String -> Maybe ServerInfo
-parseServerWorld = read
+parseServerWorld = const Nothing
 
 
 -- blocks the thread, when recieving new info from server, it passes it into the shared MVar
 readerThread :: Handle -> SharedWorldRef -> IO ()
 readerThread h shared = forever $ do
     line <- hGetLine h
+    -- for debug reasons i wanna see it
+    putStrLn $ "s: " ++ line
     case parseServerWorld line of
         Nothing -> pure ()
         Just w  -> do
             _ <- tryTakeMVar shared
             putMVar shared w
-
-
--- updatesFromServer :: SharedWorldRef -> IO ServerInfo
--- updatesFromServer shared = 
---     readMVar shared
 
 
 type LocalInfoRef = MVar ClientCoverage
@@ -47,25 +44,33 @@ eventWrapper :: LocalInfoRef -> Event -> World -> IO World
 eventWrapper cRef e w = do
     newWorld <- eventIO e w
     let coverage = toClientCoverage (local newWorld)
-    putMVar cRef coverage
+
+    -- replaces the value with the new one
+    -- maybe isnt the best way to do it, but it is non-blocking, 
+    -- and even if there was a concern of a data race, it would not be a critical bug 
+    _ <- tryTakeMVar cRef
+    _ <- tryPutMVar cRef coverage
+    
     return newWorld
 
 
-randomInt :: Int -> IO Int
-randomInt n = do
-    t <- getPOSIXTime
-    return (floor (t * 1000000) `mod` n)
+-- randomInt :: Int -> IO Int
+-- randomInt n = do
+--     t <- getPOSIXTime
+--     return (floor (t * 1000000) `mod` n)
 
-oneInTwentyTrue :: IO Bool
-oneInTwentyTrue = do
-    i <- randomInt 20
-    return $ i == 0
+-- oneInTwentyTrue :: IO Bool
+-- oneInTwentyTrue = do
+--     i <- randomInt 20
+--     return $ i == 0
 
--- this thread is gonna be blocke duntil the coverage statistic is filled
+-- this thread is gonna be blocked until the coverage statistic is filled
 writerThread :: Handle -> LocalInfoRef -> IO ()
-writerThread h info = do
-    -- shouldPrint <- oneInTwentyTrue
+writerThread h info = forever $ do
     coverage <- takeMVar info
-    hPrint h coverage
-    -- when shouldPrint $ hPrint h coverage
+
+    -- debugging you know...
+    putStrLn $ "C: " ++ showClientCoverage coverage 
+
+    hPutStrLn h (showClientCoverage coverage)
 

@@ -15,6 +15,9 @@ data Shard
 
 type SubTile = (Int, Int, Shard)
 
-type ClientCoverage = Set.Set SubTile
+type ClientCoverage = Set.Set SubTile   
+
+showClientCoverage :: ClientCoverage -> String
+showClientCoverage c = "Cover " ++ show (Set.toList c)
 
 type ServerCoverage = Map.Map SubTile Int

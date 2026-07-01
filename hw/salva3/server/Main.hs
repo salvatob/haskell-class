@@ -1,5 +1,5 @@
-module Server where
 {-# LANGUAGE TupleSections #-}
+module Main where
 
 import Control.Applicative
 import Control.Concurrent
@@ -56,6 +56,7 @@ makeStats st =
     cnt m x = M.alter ((<|> Just 0) . fmap succ) x m
     threshold = maximum counts `div` 2
 
+
 workerThread :: ServerCom -> State -> IO ()
 workerThread com state = do
   let broadcast x = atomically $ writeTChan (outChan com) x
@@ -69,6 +70,7 @@ workerThread com state = do
     (i, Quit) ->
       let (l, r) = splitAround i state
        in continue $ l `SI.merge` r
+
 
 main =
   withSocketsDo $ do

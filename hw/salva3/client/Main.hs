@@ -50,3 +50,6 @@ main = withSocketsDo $ do
     _ <- forkIO $ writerThread h sharedLocalInfo
     
     runGame sharedLocalInfo sharedServerInfo
+
+    hPutStrLn h "Quit"
+    
