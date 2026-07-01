@@ -15,14 +15,14 @@ import Graphics.Gloss.Interface.IO.Game
 import qualified Data.Set as Set
 import qualified Data.Map.Strict as Map
 
+import Protocol
 
-
-data Shard
-  = S
-  | E
-  | N
-  | W
-  deriving (Show, Read, Eq, Bounded, Enum, Ord)
+-- data Shard
+--   = S
+--   | E
+--   | N
+--   | W
+--   deriving (Show, Read, Eq, Bounded, Enum, Ord)
 
 type Pos = (Int, Int)
 
@@ -159,11 +159,11 @@ ltrEvent k (Dragging (Tile p ss) ts)
   | k == 'v' = Dragging (Tile p $ flipV ss) ts
 ltrEvent _ st = st
 
-type SubTile = (Int, Int, Shard)
+-- type SubTile = (Int, Int, Shard)
 
-type ClientCoverage = Set.Set SubTile
+-- type ClientCoverage = Set.Set SubTile
 
-type ServerCoverage = Map.Map SubTile Int
+-- type ServerCoverage = Map.Map SubTile Int
 
 getTiles :: St -> [Tile]
 getTiles (Selecting t ts) = t:ts

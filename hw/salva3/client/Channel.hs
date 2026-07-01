@@ -14,6 +14,7 @@ import Graphics.Gloss.Interface.Pure.Game
 import Data.Time.Clock.POSIX (getPOSIXTime)
 
 import Editor
+import Protocol
 
 type SharedWorldRef = MVar ServerInfo
 
