@@ -1,0 +1,15 @@
+module Protocol where
+
+data Shard
+  = S
+  | E
+  | N
+  | W
+  deriving (Show, Read, Eq, Bounded, Enum, Ord)
+
+
+type SubTile = (Int, Int, Shard)
+
+type ClientCoverage = Set.Set SubTile
+
+type ServerCoverage = Map.Map SubTile Int

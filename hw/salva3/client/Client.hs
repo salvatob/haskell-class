@@ -42,9 +42,11 @@ main = withSocketsDo $ do
     h <- socketToHandle sock ReadWriteMode
     hSetBuffering h NoBuffering
 
-    shared <- newMVar Nothing
+    sharedServerInfo <- newEmptyMVar
+    sharedLocalInfo <- newEmptyMVar
 
-    _ <- forkIO $ readerThread h shared
-
+    _ <- forkIO $ readerThread h sharedServerInfo
     
-    runGame shared
+    _ <- forkIO $ writerThread h sharedLocalInfo
+    
+    runGame sharedLocalInfo sharedServerInfo

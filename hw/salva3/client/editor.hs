@@ -193,4 +193,3 @@ eventIO :: Event -> World -> IO World
 eventIO (EventKey (SpecialKey KeyEsc) Down _ _) _ = do exitSuccess
 eventIO (EventKey (Char 'i') Down _ _) w = pure $ w {server = server w + 1}
 eventIO e s = pure $ s { local = localEvent e (local s) }
-
