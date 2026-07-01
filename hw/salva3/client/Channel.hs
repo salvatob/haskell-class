@@ -1,7 +1,7 @@
+module Channel where
 {- cabal:
     build-depends: base, network, containers
 -}
-module Channel where
 
 import Control.Concurrent
 import Network.Socket

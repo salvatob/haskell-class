@@ -53,6 +53,15 @@ extra-doc-files:    CHANGELOG.md
 common warnings
     ghc-options: -Wall
 
+library
+  hs-source-dirs: src/
+  default-language: Haskell2010
+  exposed-modules:
+      Protocol
+  build-depends:
+      base,
+      containers
+
 
 executable server
   main-is: Server.hs
@@ -62,28 +71,24 @@ executable server
       base,
       network,
       containers,
-      stm
+      stm,
+      logo-webapp
+  -- other-modules:
 
 
 executable client
-  main-is: Client.hs
+  main-is: Main.hs
   default-language: Haskell2010
-  hs-source-dirs: client/
+  hs-source-dirs: client
   build-depends:
       base,
       network,
       gloss,
       containers,
-      time
+      time,
+      logo-webapp
 
   other-modules:
     Editor,
     Channel,
     GameLoop
-
-executable editor
-  main-is: Main.hs
-  hs-source-dirs: src/
-  build-depends:
-    base,
-    containers

@@ -1,7 +1,7 @@
+module Editor where
 {- cabal:
     build-depends: base, gloss, containers
 -}
-module Editor where
 
 import Control.Monad
 import Data.List

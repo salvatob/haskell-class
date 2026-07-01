@@ -1,4 +1,4 @@
-
+module Server where
 {-# LANGUAGE TupleSections #-}
 
 import Control.Applicative
