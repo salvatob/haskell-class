@@ -1,18 +1,20 @@
-{-# LANGUAGE PatternGuards #-}
+{- cabal:
+    build-depends: base, gloss, containers
+-}
+module Editor where
 
 import Control.Monad
 import Data.List
 import System.Exit (exitSuccess)
 import Debug.Trace (trace)
+
 import Graphics.Gloss
 import Graphics.Gloss.Interface.Pure.Game
--- import Graphics.Gloss.Interface.IO.Interact
 import Graphics.Gloss.Interface.IO.Game
 
 import qualified Data.Set as Set
 import qualified Data.Map.Strict as Map
 
-import Channel
 
 
 data Shard
@@ -192,22 +194,3 @@ eventIO (EventKey (SpecialKey KeyEsc) Down _ _) _ = do exitSuccess
 eventIO (EventKey (Char 'i') Down _ _) w = pure $ w {server = server w + 1}
 eventIO e s = pure $ s { local = localEvent e (local s) }
 
-
-parseServerWorld :: String -> ServerInfo
-parseServerWorld = read
-
--- doesnt even have to be IO since I just used trace xddd
--- updIO :: Applicative f => p -> a -> f a
-updIO :: Float -> World -> IO World
--- updIO _ tiles = trace (show $ toClientCoverage (local tiles)) (pure tiles)
-updIO _ world = do 
-  newServerState <- updateFromServer
-
-  case newServerState of
-    Nothing -> pure world
-    Just s  -> pure (world {server = parseServerWorld s})
-
-
-
-main :: IO ()
-main = playIO FullScreen white 20 initialWorld (pure . render) eventIO updIO
