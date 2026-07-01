@@ -20,4 +20,4 @@ type ClientCoverage = Set.Set SubTile
 showClientCoverage :: ClientCoverage -> String
 showClientCoverage c = "Cover " ++ show (Set.toList c)
 
-type ServerCoverage = Map.Map SubTile Int
+type ServerCoverage = [(Int, Int, Shard, Bool)]

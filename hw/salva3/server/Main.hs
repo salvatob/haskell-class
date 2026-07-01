@@ -32,7 +32,7 @@ data InMsg
   deriving (Show, Read)
 
 data OutMsg
-  = Stats [(Int, Int, Shard, Bool)]
+  = Stats ServerCoverage
   | Error
   deriving (Show, Read)
 
