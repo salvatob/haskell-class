@@ -12,4 +12,4 @@ Přidat poslání této finální zprávy do samotného eventu, který hru ukon�
 gloss nemá vědět nic o tom co se děje mimo canvas, natož aby sám posílal zprávy někam přes socket.
 
 Takhle to vypadá pro více klientů, nějaké složitější renderování jsem neřešil...
-[representative image](showcase.png)
+[representative image](./showcase.png)
