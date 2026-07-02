@@ -4,6 +4,8 @@ import Graphics.Gloss
 import Graphics.Gloss.Interface.Pure.Game
 import Graphics.Gloss.Interface.IO.Game
 import System.IO
+-- import Graphics.Gloss.Internals.Interface.Game
+-- import Graphics.Gloss.Internals.Interface.Backend
 
 
 import Editor
@@ -22,13 +24,25 @@ updIO shared _ world = do
             Just s ->
                 world { server = s }
 
-runGame :: LocalInfoRef -> SharedWorldRef -> IO()
-runGame locatStateRef sharedServerRef = playIO
-        FullScreen
+
+-- myPlay  display backColor simResolution
+--         worldStart worldToPicture worldHandleEvent worldAdvance
+
+--  = playWithBackendIO defaultBackendState
+--         display backColor simResolution
+--         worldStart worldToPicture worldHandleEvent worldAdvance
+--         False
+
+runGame :: LocalInfoRef -> SharedWorldRef -> (Int, Int, Int, Int) -> IO()
+runGame locatStateRef sharedServerRef (w,h,x,y) = do
+    print (w,h,x,y)
+    playIO
+        -- FullScreen
+        (InWindow "logo-webapp" (w, h) (x, y))
         white 
         20
         initialWorld 
-        (pure . render) 
+        (pure . render (w, h)) 
         (eventWrapper locatStateRef) 
         (updIO sharedServerRef)
 

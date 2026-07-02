@@ -111,37 +111,37 @@ initialWorld = World local server
     server = []
 
 render :: (Int, Int) -> World -> Picture
-render d (World l s) =
+render (w, h) (World l s) =
   let
-    localP = renderLocal d l
-    serverP = renderServer d s
+    tileSize = fromIntegral (min w h) / 10
+    scene =
+      Pictures
+        [ renderServer s
+        , renderLocal l
+        ]
   in
-    Pictures [serverP, localP]
+    Scale tileSize tileSize scene
 
-renderLocal :: (Int, Int) -> St -> Picture
-renderLocal (w,h) = Scale 100 100 . go
+
+renderLocal :: St -> Picture
+renderLocal = go
   where
     go (Selecting t ts) =
       Pictures [renderTiles ts, Color (greyN 0.2) $ renderTile t]
-    go (Dragging t ts) = Pictures [renderTiles ts, Color red $ renderTile t]
+    go (Dragging t ts) =
+      Pictures [renderTiles ts, Color red $ renderTile t]
 
-
-renderServer :: (Int, Int) -> ServerCoverage -> Picture
-renderServer (w,h) =
-  Scale 100 100
-    . Pictures
-    . map renderShard
+renderServer :: ServerCoverage -> Picture
+renderServer =
+  Pictures . map renderShard
   where
-    majorityColor = makeColorI 230 210 120 255  -- pale gold
+    majorityColor = makeColorI 230 210 120 255
     minorityColor = light (greyN 0.7)
 
     renderShard (x, y, shard, isMajority) =
-      let col = if isMajority then majorityColor else minorityColor
-      in Color col $
-           Translate (fromIntegral x) (fromIntegral y) $
-             drawSq [shard]
-
-
+      Color (if isMajority then majorityColor else minorityColor) $
+        Translate (fromIntegral x) (fromIntegral y) $
+          drawSq [shard]
 
 localEvent :: Event -> St -> St
 localEvent (EventKey (SpecialKey k) Down _ _) st = skEvent k st
