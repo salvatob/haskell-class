@@ -16,6 +16,7 @@ import qualified Data.Set as Set
 import qualified Data.Map.Strict as Map
 
 import Protocol
+import Control.Exception
 
 -- data Shard
 --   = S
@@ -109,28 +110,37 @@ initialWorld = World local server
     local = Selecting t ts
     server = []
 
-render :: World -> Picture
-render (World l s) = renderLocal l
-  -- let
-  --   localP = renderLocal l
-  --   serverP = renderServer s
-  -- in
-  --   Pictures [localP, serverP]
+render :: (Int, Int) -> World -> Picture
+render d (World l s) =
+  let
+    localP = renderLocal d l
+    serverP = renderServer d s
+  in
+    Pictures [serverP, localP]
 
-renderLocal :: St -> Picture
-renderLocal = Scale 100 100 . go
+renderLocal :: (Int, Int) -> St -> Picture
+renderLocal (w,h) = Scale 100 100 . go
   where
     go (Selecting t ts) =
       Pictures [renderTiles ts, Color (greyN 0.2) $ renderTile t]
     go (Dragging t ts) = Pictures [renderTiles ts, Color red $ renderTile t]
 
 
-renderServer :: ServerInfo -> Picture
-renderServer i = 
-        translate (-600) 380 $
-         scale 0.5 0.5
-        $ color red
-        $ Text $ show i
+renderServer :: (Int, Int) -> ServerCoverage -> Picture
+renderServer (w,h) =
+  Scale 100 100
+    . Pictures
+    . map renderShard
+  where
+    majorityColor = makeColorI 230 210 120 255  -- pale gold
+    minorityColor = light (greyN 0.7)
+
+    renderShard (x, y, shard, isMajority) =
+      let col = if isMajority then majorityColor else minorityColor
+      in Color col $
+           Translate (fromIntegral x) (fromIntegral y) $
+             drawSq [shard]
+
 
 
 localEvent :: Event -> St -> St
@@ -163,6 +173,7 @@ ltrEvent _ st = st
 
 
 eventIO :: Event -> World -> IO World
-eventIO (EventKey (SpecialKey KeyEsc) Down _ _) _ = do exitSuccess
+-- eventIO (EventKey (SpecialKey KeyEsc) Down _ _) _ = exitSuccess
+eventIO (EventKey (SpecialKey KeyEsc) Down _ _) _ = throwIO (userError "quit")
 eventIO (EventKey (Char 'i') Down _ _) w = pure $ w {server = []}
 eventIO e s = pure $ s { local = localEvent e (local s) }
