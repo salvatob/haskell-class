@@ -56,14 +56,14 @@ eventWrapper cRef e w = do
   return newWorld
 
 -- this thread is gonna be blocked until the coverage statistic MVar is filled
-writerLoop :: Handle -> LocalInfoRef -> IO ()
-writerLoop h info =
+writerThread :: Handle -> LocalInfoRef -> IO ()
+writerThread h info =
   forever $ do
     coverage <- takeMVar info
     hPutStrLn h (showClientCoverage coverage)
 
-writerThread :: Handle -> LocalInfoRef -> IO ()
-writerThread h shared = do
-  writerLoop h shared `finally` do
-    hPutStrLn h "Quit"
-    putStrLn "C: ending connection."
+-- writerThread :: Handle -> LocalInfoRef -> IO ()
+-- writerThread h shared = do
+--   writerLoop h shared `finally` do
+--     hPutStrLn h "Quit"
+--     putStrLn "C: ending connection."
