@@ -1,29 +1,22 @@
 module Editor where
+
 {- cabal:
     build-depends: base, gloss, containers
 -}
-
 import Control.Monad
 import Data.List
-import System.Exit (exitSuccess)
 import Debug.Trace (trace)
+import System.Exit (exitSuccess)
 
 import Graphics.Gloss
-import Graphics.Gloss.Interface.Pure.Game
 import Graphics.Gloss.Interface.IO.Game
+import Graphics.Gloss.Interface.Pure.Game
 
-import qualified Data.Set as Set
 import qualified Data.Map.Strict as Map
+import qualified Data.Set as Set
 
-import Protocol
 import Control.Exception
-
--- data Shard
---   = S
---   | E
---   | N
---   | W
---   deriving (Show, Read, Eq, Bounded, Enum, Ord)
+import Protocol
 
 type Pos = (Int, Int)
 
@@ -40,10 +33,10 @@ data St
 
 type ServerInfo = Int
 
-data World = World {
-  local :: St,
-  server :: ServerCoverage
-}
+data World = World
+  { local :: St
+  , server :: ServerCoverage
+  }
 
 addCx :: (Num a, Num b) => (a, b) -> (a, b) -> (a, b)
 addCx (a, b) (c, d) = (a + c, b + d)
@@ -76,7 +69,11 @@ startingTiles =
   , Tile (4, 0) [((0, 0), [S, E, N, W])]
   ]
 
-cplx :: (Integral a1, Integral a2, Num t1, Num t2) => (t1 -> t2 -> t3) -> (a1, a2) -> t3
+cplx ::
+     (Integral a1, Integral a2, Num t1, Num t2)
+  => (t1 -> t2 -> t3)
+  -> (a1, a2)
+  -> t3
 cplx f (a, b) = f (fromIntegral a) (fromIntegral b)
 
 unSq :: p -> p -> p -> p -> Shard -> p
@@ -112,36 +109,29 @@ initialWorld = World local server
 
 render :: (Int, Int) -> World -> Picture
 render (w, h) (World l s) =
-  let
-    tileSize = fromIntegral (min w h) / 10
-    scene =
-      Pictures
-        [ renderServer s
-        , renderLocal l
-        ]
-  in
-    Scale tileSize tileSize scene
-
+  let tileSize = fromIntegral (min w h) / 10
+      scene = Pictures [renderServer s, renderLocal l]
+   in Scale tileSize tileSize scene
 
 renderLocal :: St -> Picture
 renderLocal = go
   where
     go (Selecting t ts) =
       Pictures [renderTiles ts, Color (greyN 0.2) $ renderTile t]
-    go (Dragging t ts) =
-      Pictures [renderTiles ts, Color red $ renderTile t]
+    go (Dragging t ts) = Pictures [renderTiles ts, Color red $ renderTile t]
 
 renderServer :: ServerCoverage -> Picture
-renderServer =
-  Pictures . map renderShard
+renderServer = Pictures . map renderShard
   where
     majorityColor = makeColorI 230 210 120 255
     minorityColor = light (greyN 0.7)
-
     renderShard (x, y, shard, isMajority) =
-      Color (if isMajority then majorityColor else minorityColor) $
-        Translate (fromIntegral x) (fromIntegral y) $
-          drawSq [shard]
+      Color
+        (if isMajority
+           then majorityColor
+           else minorityColor)
+        $ Translate (fromIntegral x) (fromIntegral y)
+        $ drawSq [shard]
 
 localEvent :: Event -> St -> St
 localEvent (EventKey (SpecialKey k) Down _ _) st = skEvent k st
@@ -169,11 +159,8 @@ ltrEvent k (Dragging (Tile p ss) ts)
   | k == 'v' = Dragging (Tile p $ flipV ss) ts
 ltrEvent _ st = st
 
-
-
-
 eventIO :: Event -> World -> IO World
 -- eventIO (EventKey (SpecialKey KeyEsc) Down _ _) _ = exitSuccess
 eventIO (EventKey (SpecialKey KeyEsc) Down _ _) _ = throwIO (userError "quit")
 eventIO (EventKey (Char 'i') Down _ _) w = pure $ w {server = []}
-eventIO e s = pure $ s { local = localEvent e (local s) }
+eventIO e s = pure $ s {local = localEvent e (local s)}

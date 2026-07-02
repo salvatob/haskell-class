@@ -1,9 +1,8 @@
 module Protocol where
 
-import qualified Data.Set as Set
-import qualified Data.Map.Strict as Map
 import Data.List (stripPrefix)
-
+import qualified Data.Map.Strict as Map
+import qualified Data.Set as Set
 
 data Shard
   = S
@@ -11,7 +10,6 @@ data Shard
   | N
   | W
   deriving (Show, Read, Eq, Bounded, Enum, Ord)
-
 
 type SubTile = (Int, Int, Shard)
 
@@ -24,7 +22,7 @@ type ServerCoverage = [(Int, Int, Shard, Bool)]
 
 parseServerCoverage :: String -> Maybe ServerCoverage
 parseServerCoverage str = do
-    rest <- stripPrefix "Stats " str
-    case reads rest of
-        [(coverage, "")] -> Just coverage
-        _                -> Nothing
+  rest <- stripPrefix "Stats " str
+  case reads rest of
+    [(coverage, "")] -> Just coverage
+    _ -> Nothing

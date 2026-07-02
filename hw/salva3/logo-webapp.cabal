@@ -59,7 +59,7 @@ library
   exposed-modules:
       Protocol
   build-depends:
-      base,
+      base >= 4.5 && < 4.7,
       containers
 
 
@@ -68,7 +68,7 @@ executable server
   hs-source-dirs: server/
   default-language: Haskell2010
   build-depends:
-      base,
+      base >= 4.5 && < 4.7,
       network,
       containers,
       stm,
@@ -81,7 +81,7 @@ executable client
   default-language: Haskell2010
   hs-source-dirs: client
   build-depends:
-      base,
+      base >= 4.5 && < 4.7,
       network,
       gloss,
       containers,

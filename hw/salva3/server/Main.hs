@@ -1,4 +1,5 @@
 {-# LANGUAGE TupleSections #-}
+
 module Main where
 
 import Control.Applicative
@@ -51,7 +52,6 @@ makeStats st =
     cnt m x = M.alter ((<|> Just 0) . fmap succ) x m
     threshold = maximum counts `div` 2
 
-
 workerThread :: ServerCom -> State -> IO ()
 workerThread com state = do
   let broadcast x = atomically $ writeTChan (outChan com) x
@@ -66,11 +66,11 @@ workerThread com state = do
       let (l, r) = splitAround i state
        in continue $ l `SI.merge` r
 
-
 main =
   withSocketsDo $ do
     com <- newServerCom
     worker <- forkIO $ workerThread com S.empty
+    putStrLn "Server running..."
     E.bracket open close $ mainLoop com
   where
     open = do
@@ -96,10 +96,11 @@ runConn com h = do
   clientId <- takeMVar $ clientIdCtr com
   clientIdCtr com `putMVar` succ clientId
   myChan <- atomically $ dupTChan (outChan com)
-  sender <- forkIO . forever $ do
-    msg <- atomically (readTChan myChan)
-    putStrLn $ "--> (" ++ show clientId ++ ") " ++ show msg
-    hPrint h msg
+  sender <-
+    forkIO . forever $ do
+      msg <- atomically (readTChan myChan)
+      putStrLn $ "--> (" ++ show clientId ++ ") " ++ show msg
+      hPrint h msg
   let loop = do
         -- the filter here removes the \r (and other ugly stuff) typically sent
         -- by telnet and other manual neworkish tools
