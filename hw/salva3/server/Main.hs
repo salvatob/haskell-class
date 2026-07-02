@@ -16,12 +16,7 @@ import Network.Socket
 import System.IO
 import Text.Read
 
-data Shard
-  = S
-  | E
-  | N
-  | W
-  deriving (Show, Read, Eq, Ord, Bounded, Enum)
+import Protocol
 
 type State = S.Set (Int, (Int, Int, Shard))
 

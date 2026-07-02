@@ -11,16 +11,13 @@ import Graphics.Gloss.Interface.Pure.Game
 
 
 
-import Data.Time.Clock.POSIX (getPOSIXTime)
+-- import Data.Time.Clock.POSIX (getPOSIXTime)
 
 import Editor
 import Protocol
+import qualified Data.Set as Set
 
-type SharedWorldRef = MVar ServerInfo
-
-
-parseServerWorld :: String -> Maybe ServerInfo
-parseServerWorld = const Nothing
+type SharedWorldRef = MVar ServerCoverage
 
 
 -- blocks the thread, when recieving new info from server, it passes it into the shared MVar
@@ -29,7 +26,7 @@ readerThread h shared = forever $ do
     line <- hGetLine h
     -- for debug reasons i wanna see it
     putStrLn $ "s: " ++ line
-    case parseServerWorld line of
+    case parseServerCoverage line of
         Nothing -> pure ()
         Just w  -> do
             _ <- tryTakeMVar shared
@@ -37,6 +34,24 @@ readerThread h shared = forever $ do
 
 
 type LocalInfoRef = MVar ClientCoverage
+
+
+getTiles :: St -> [Tile]
+getTiles (Selecting t ts) = t:ts
+getTiles (Dragging t ts) = t:ts
+
+toClientCoverage :: St -> ClientCoverage
+toClientCoverage st =
+  let
+    tiles = getTiles st
+  in
+    Set.fromList
+      [ (tx + dx, ty + dy, shard)
+      | Tile (tx, ty) subs <- tiles
+      , ((dx, dy), shards) <- subs
+      , shard <- shards
+      ]
+
 
 
 -- wrap the event handling so I can do things to teh world after each update

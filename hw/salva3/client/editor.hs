@@ -41,7 +41,7 @@ type ServerInfo = Int
 
 data World = World {
   local :: St,
-  server :: ServerInfo
+  server :: ServerCoverage
 }
 
 addCx :: (Num a, Num b) => (a, b) -> (a, b) -> (a, b)
@@ -107,15 +107,15 @@ initialWorld = World local server
   where
     (t:ts) = startingTiles
     local = Selecting t ts
-    server = 0
+    server = []
 
 render :: World -> Picture
-render (World l s) =
-  let
-    localP = renderLocal l
-    serverP = renderServer s
-  in
-    Pictures [localP, serverP]
+render (World l s) = renderLocal l
+  -- let
+  --   localP = renderLocal l
+  --   serverP = renderServer s
+  -- in
+  --   Pictures [localP, serverP]
 
 renderLocal :: St -> Picture
 renderLocal = Scale 100 100 . go
@@ -159,37 +159,10 @@ ltrEvent k (Dragging (Tile p ss) ts)
   | k == 'v' = Dragging (Tile p $ flipV ss) ts
 ltrEvent _ st = st
 
--- type SubTile = (Int, Int, Shard)
 
--- type ClientCoverage = Set.Set SubTile
-
--- type ServerCoverage = Map.Map SubTile Int
-
-getTiles :: St -> [Tile]
-getTiles (Selecting t ts) = t:ts
-getTiles (Dragging t ts) = t:ts
-
-toClientCoverage :: St -> ClientCoverage
-toClientCoverage st =
-  let
-    tiles = getTiles st
-  in
-    Set.fromList
-      [ (tx + dx, ty + dy, shard)
-      | Tile (tx, ty) subs <- tiles
-      , ((dx, dy), shards) <- subs
-      , shard <- shards
-      ]
-
-toServerCoverage :: [ClientCoverage] -> ServerCoverage
-toServerCoverage =
-  foldl'
-    (Set.foldl'
-         (\acc subtile -> Map.insertWith (+) subtile 1 acc))
-    Map.empty
 
 
 eventIO :: Event -> World -> IO World
 eventIO (EventKey (SpecialKey KeyEsc) Down _ _) _ = do exitSuccess
-eventIO (EventKey (Char 'i') Down _ _) w = pure $ w {server = server w + 1}
+eventIO (EventKey (Char 'i') Down _ _) w = pure $ w {server = []}
 eventIO e s = pure $ s { local = localEvent e (local s) }
