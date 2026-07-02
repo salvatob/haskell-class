@@ -9,10 +9,6 @@ import System.IO
 import Control.Monad
 import Graphics.Gloss.Interface.Pure.Game
 
-
-
--- import Data.Time.Clock.POSIX (getPOSIXTime)
-
 import Editor
 import Protocol
 import qualified Data.Set as Set
@@ -24,8 +20,7 @@ type SharedWorldRef = MVar ServerCoverage
 readerThread :: Handle -> SharedWorldRef -> IO ()
 readerThread h shared = forever $ do
     line <- hGetLine h
-    -- for debug reasons i wanna see it
-    putStrLn $ "s: " ++ line
+
     case parseServerCoverage line of
         Nothing -> pure ()
         Just w  -> do
@@ -54,7 +49,7 @@ toClientCoverage st =
 
 
 
--- wrap the event handling so I can do things to teh world after each update
+-- wrap the event handling so I can do things to the world after each update
 eventWrapper :: LocalInfoRef -> Event -> World -> IO World
 eventWrapper cRef e w = do
     newWorld <- eventIO e w
@@ -68,24 +63,10 @@ eventWrapper cRef e w = do
     
     return newWorld
 
-
--- randomInt :: Int -> IO Int
--- randomInt n = do
---     t <- getPOSIXTime
---     return (floor (t * 1000000) `mod` n)
-
--- oneInTwentyTrue :: IO Bool
--- oneInTwentyTrue = do
---     i <- randomInt 20
---     return $ i == 0
-
--- this thread is gonna be blocked until the coverage statistic is filled
+-- this thread is gonna be blocked until the coverage statistic MVar is filled
 writerThread :: Handle -> LocalInfoRef -> IO ()
 writerThread h info = forever $ do
     coverage <- takeMVar info
-
-    -- debugging you know...
-    putStrLn $ "C: " ++ showClientCoverage coverage 
 
     hPutStrLn h (showClientCoverage coverage)
 
