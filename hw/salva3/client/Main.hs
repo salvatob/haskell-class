@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module Main where
 {- cabal:
 build-depends: base, network
@@ -6,9 +7,11 @@ build-depends: base, network
 import Control.Concurrent
 import Network.Socket
 import System.IO
+import Control.Exception
 
 import Channel
 import GameLoop
+import ArgOpts
 
 -- main =
 --   withSocketsDo $ do
@@ -30,13 +33,16 @@ import GameLoop
 --     threadDelay 100000
 --     hClose h
 
+main :: IO ()
 main = withSocketsDo $ do
+    args <- parseCmdArgs
+
     sock <- socket AF_INET Stream 0
 
     addr <- addrAddress . head
         <$> getAddrInfo (Just defaultHints)
-                        (Just "127.0.0.1")
-                        (Just "10042")
+                        (Just (address args))
+                        (Just (show $ port args))
 
     connect sock addr
     h <- socketToHandle sock ReadWriteMode
@@ -49,7 +55,15 @@ main = withSocketsDo $ do
     
     _ <- forkIO $ writerThread h sharedLocalInfo
     
-    runGame sharedLocalInfo sharedServerInfo
+    let myWindow = ( windowWidth args, windowHeight args, windowX args, windowY args)
+    -- let window = (800,600,200,200)
 
-    hPutStrLn h "Quit"
-    
+    finally
+        (runGame sharedLocalInfo sharedServerInfo myWindow) 
+        (do
+            hPutStrLn h "Quit"
+            putStrLn "C: ending connection."
+            )
+    -- runGame  sharedLocalInfo sharedServerInfo `catch` \(e :: SomeException) -> do
+    --     putStrLn $ "Caught: " ++ displayException e
+    --     throwIO e
