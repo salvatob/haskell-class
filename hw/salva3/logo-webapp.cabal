@@ -86,9 +86,11 @@ executable client
       gloss,
       containers,
       time,
+      optparse-applicative,
       logo-webapp
 
   other-modules:
     Editor,
     Channel,
-    GameLoop
+    GameLoop,
+    ArgOpts
